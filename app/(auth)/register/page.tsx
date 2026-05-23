@@ -2,10 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { useState, type FormEvent } from "react";
 
 interface RegisterFormErrors {
-  nom?: string;
+  name?: string;
   email?: string;
   password?: string;
   confirmPassword?: string;
@@ -48,22 +48,29 @@ const getRegisterErrorMessage = async (response: Response): Promise<string> => {
   }
 };
 
+interface RegisterFormValues {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+}
+
 const RegisterPage = () => {
   const router = useRouter();
-  const [nom, setNom] = useState("");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errors, setErrors] = useState<RegisterFormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const validateForm = (): RegisterFormErrors => {
+  const validateForm = (values: RegisterFormValues): RegisterFormErrors => {
     const nextErrors: RegisterFormErrors = {};
-    const trimmedNom = nom.trim();
-    const trimmedEmail = email.trim();
+    const trimmedName = values.name.trim();
+    const trimmedEmail = values.email.trim();
 
-    if (!trimmedNom) {
-      nextErrors.nom = "Le nom est requis.";
+    if (!trimmedName) {
+      nextErrors.name = "Le nom est requis.";
     }
 
     if (!trimmedEmail) {
@@ -72,16 +79,16 @@ const RegisterPage = () => {
       nextErrors.email = "Entrez un email valide.";
     }
 
-    if (!password) {
+    if (!values.password) {
       nextErrors.password = "Le mot de passe est requis.";
-    } else if (password.length < minimumPasswordLength) {
+    } else if (values.password.length < minimumPasswordLength) {
       nextErrors.password =
         "Le mot de passe doit contenir au moins 8 caractères.";
     }
 
-    if (!confirmPassword) {
+    if (!values.confirmPassword) {
       nextErrors.confirmPassword = "Confirmez le mot de passe.";
-    } else if (password !== confirmPassword) {
+    } else if (values.password !== values.confirmPassword) {
       nextErrors.confirmPassword =
         "La confirmation ne correspond pas au mot de passe.";
     }
@@ -92,7 +99,17 @@ const RegisterPage = () => {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const validationErrors = validateForm();
+    if (isSubmitting) {
+      return;
+    }
+
+    const values: RegisterFormValues = {
+      name,
+      email,
+      password,
+      confirmPassword,
+    };
+    const validationErrors = validateForm(values);
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -102,29 +119,35 @@ const RegisterPage = () => {
     setErrors({});
     setIsSubmitting(true);
 
-    const response = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        nom: nom.trim(),
-        email: email.trim().toLowerCase(),
-        password,
-      }),
-    });
-
-    setIsSubmitting(false);
-
-    if (!response.ok) {
-      setErrors({
-        form: await getRegisterErrorMessage(response),
+    try {
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: values.name.trim(),
+          email: values.email.trim().toLowerCase(),
+          password: values.password,
+        }),
       });
-      return;
-    }
 
-    router.push("/login");
-    router.refresh();
+      if (!response.ok) {
+        setErrors({
+          form: await getRegisterErrorMessage(response),
+        });
+        return;
+      }
+
+      router.push("/login");
+      router.refresh();
+    } catch {
+      setErrors({
+        form: "Impossible de créer le compte pour le moment.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -148,25 +171,31 @@ const RegisterPage = () => {
           </div>
         ) : null}
 
-        <form className="space-y-5" noValidate onSubmit={handleSubmit}>
+        <form
+          action="/api/auth/register"
+          className="space-y-5"
+          method="post"
+          noValidate
+          onSubmit={handleSubmit}
+        >
           <div>
             <label
               className="mb-2 block text-sm font-medium text-zinc-800"
-              htmlFor="nom"
+              htmlFor="name"
             >
               Nom
             </label>
             <input
               autoComplete="name"
               className="h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
-              id="nom"
-              name="nom"
-              onChange={(event) => setNom(event.target.value)}
+              id="name"
+              name="name"
+              onChange={(event) => setName(event.target.value)}
               type="text"
-              value={nom}
+              value={name}
             />
-            {errors.nom ? (
-              <p className="mt-2 text-sm text-red-600">{errors.nom}</p>
+            {errors.name ? (
+              <p className="mt-2 text-sm text-red-600">{errors.name}</p>
             ) : null}
           </div>
 

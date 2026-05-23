@@ -16,7 +16,7 @@ const cached: MongooseCache = globalThis.mongooseCache ?? {
 
 globalThis.mongooseCache = cached;
 
-export const connectToDatabase = async (): Promise<Mongoose> => {
+export const connectDB = async (): Promise<Mongoose> => {
   if (cached.conn) {
     return cached.conn;
   }
@@ -27,13 +27,22 @@ export const connectToDatabase = async (): Promise<Mongoose> => {
     throw new Error("MONGODB_URI is not defined");
   }
 
-  cached.promise ??= mongoose.connect(mongoUri, {
-    bufferCommands: false,
-  });
+  try {
+    cached.promise ??= mongoose.connect(mongoUri, {
+      bufferCommands: false,
+    });
 
-  cached.conn = await cached.promise;
+    cached.conn = await cached.promise;
 
-  return cached.conn;
+    return cached.conn;
+  } catch (error) {
+    cached.promise = null;
+    throw new Error(
+      error instanceof Error
+        ? `MongoDB connection failed: ${error.message}`
+        : "MongoDB connection failed",
+    );
+  }
 };
 
-export default connectToDatabase;
+export default connectDB;

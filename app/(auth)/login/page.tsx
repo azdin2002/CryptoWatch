@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
 
 interface LoginFormErrors {
@@ -13,6 +13,11 @@ interface LoginFormErrors {
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+interface LoginFormValues {
+  email: string;
+  password: string;
+}
+
 const LoginPage = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -20,9 +25,9 @@ const LoginPage = () => {
   const [errors, setErrors] = useState<LoginFormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const validateForm = (): LoginFormErrors => {
+  const validateForm = (values: LoginFormValues): LoginFormErrors => {
     const nextErrors: LoginFormErrors = {};
-    const trimmedEmail = email.trim();
+    const trimmedEmail = values.email.trim();
 
     if (!trimmedEmail) {
       nextErrors.email = "L'email est requis.";
@@ -30,7 +35,7 @@ const LoginPage = () => {
       nextErrors.email = "Entrez un email valide.";
     }
 
-    if (!password) {
+    if (!values.password) {
       nextErrors.password = "Le mot de passe est requis.";
     }
 
@@ -40,7 +45,15 @@ const LoginPage = () => {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const validationErrors = validateForm();
+    if (isSubmitting) {
+      return;
+    }
+
+    const values: LoginFormValues = {
+      email,
+      password,
+    };
+    const validationErrors = validateForm(values);
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -50,23 +63,30 @@ const LoginPage = () => {
     setErrors({});
     setIsSubmitting(true);
 
-    const result = await signIn("credentials", {
-      email: email.trim().toLowerCase(),
-      password,
-      redirect: false,
-    });
-
-    setIsSubmitting(false);
-
-    if (!result || result.error) {
-      setErrors({
-        form: "Email ou mot de passe incorrect.",
+    try {
+      const result = await signIn("credentials", {
+        email: values.email.trim().toLowerCase(),
+        password: values.password,
+        callbackUrl: "/dashboard",
+        redirect: false,
       });
-      return;
-    }
 
-    router.push("/dashboard");
-    router.refresh();
+      if (!result?.ok || result.error) {
+        setErrors({
+          form: "Email ou mot de passe incorrect.",
+        });
+        return;
+      }
+
+      router.push("/dashboard");
+      router.refresh();
+    } catch {
+      setErrors({
+        form: "Impossible de se connecter pour le moment.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -90,7 +110,13 @@ const LoginPage = () => {
           </div>
         ) : null}
 
-        <form className="space-y-5" noValidate onSubmit={handleSubmit}>
+        <form
+          action="/api/auth/callback/credentials"
+          className="space-y-5"
+          method="post"
+          noValidate
+          onSubmit={handleSubmit}
+        >
           <div>
             <label
               className="mb-2 block text-sm font-medium text-zinc-800"
