@@ -1,98 +1,287 @@
-# CryptoWatch
+# CryptoWatch — Application de suivi des crypto-monnaies
 
-CryptoWatch is a Next.js App Router application for tracking cryptocurrency market data, user watchlists, and price alerts.
+> Projet Fin de Module — Développement Front-End et Frameworks  
+> Prof. N. El Bahri — Année Universitaire 2025-2026  
+> Groupe G3
 
-## Stack
+---
 
-- Next.js 16 with App Router architecture compatible with the Next.js 14 style
-- React 19
-- TypeScript strict mode
-- Tailwind CSS
-- MongoDB with Mongoose
-- NextAuth.js credentials authentication
-- Redux Toolkit and React Redux
-- Recharts
+## Vue d'ensemble
 
-## Getting Started
+CryptoWatch est une application web full-stack permettant aux utilisateurs de suivre l'évolution des crypto-monnaies en temps réel, consulter les tendances du marché, gérer leur portefeuille personnel et recevoir des alertes personnalisées sur leurs actifs favoris.
 
-Install dependencies:
+---
+
+## Stack technique
+
+| Couche | Technologie | Rôle |
+|---|---|---|
+| Framework | Next.js 14 (App Router) | SSR, routing, API backend |
+| UI | React 18 + Tailwind CSS | Composants, interface utilisateur |
+| État global | Redux Toolkit | Watchlist, alertes, préférences |
+| Base de données | MongoDB Atlas | Persistance des données utilisateur |
+| ODM | Mongoose | Modélisation et requêtes MongoDB |
+| Auth | NextAuth.js | Authentification sécurisée |
+| Graphiques | Recharts | Visualisation des cours |
+| API externe | CoinGecko API | Prix et données crypto en temps réel |
+| Langage | TypeScript | Typage statique |
+
+---
+
+## Fonctionnalités
+
+### Authentification et comptes
+- Inscription et connexion sécurisées (email + mot de passe)
+- Gestion du profil utilisateur
+- Sessions persistantes avec NextAuth.js
+- Protection des routes privées (middleware Next.js)
+
+### Tableau de bord
+- Vue globale du marché (top 100 cryptos)
+- Statistiques clés : capitalisation totale, volume 24h, dominance BTC
+- Graphiques d'évolution des prix (7j, 30j, 90j, 1an)
+- Indicateurs de performance : variation en % sur 24h
+
+### Watchlist personnelle
+- Ajout et suppression de cryptos favoris
+- Tri par prix, variation, capitalisation
+- Synchronisée en base de données (persistante)
+
+### Alertes de prix
+- Création d'alertes (au-dessus / en-dessous d'un seuil)
+- Notifications en temps réel (WebSocket ou polling)
+- Historique des alertes déclenchées
+
+### Recherche et filtrage
+- Recherche par nom ou symbole
+- Filtres : catégorie, variation 24h, capitalisation
+- Résultats instantanés (debounce)
+
+---
+
+## Architecture du projet
+
+```
+cryptowatch/
+├── app/                          # Next.js App Router
+│   ├── (auth)/
+│   │   ├── login/
+│   │   │   └── page.tsx
+│   │   └── register/
+│   │       └── page.tsx
+│   ├── (dashboard)/
+│   │   ├── layout.tsx
+│   │   ├── page.tsx              # Tableau de bord principal
+│   │   ├── watchlist/
+│   │   │   └── page.tsx
+│   │   ├── alerts/
+│   │   │   └── page.tsx
+│   │   └── crypto/
+│   │       └── [id]/
+│   │           └── page.tsx      # Détail d'une crypto
+│   ├── api/
+│   │   ├── auth/
+│   │   │   └── [...nextauth]/
+│   │   │       └── route.ts
+│   │   ├── watchlist/
+│   │   │   └── route.ts
+│   │   ├── alerts/
+│   │   │   └── route.ts
+│   │   └── crypto/
+│   │       └── route.ts
+│   ├── layout.tsx
+│   └── globals.css
+│
+├── components/
+│   ├── ui/                       # Composants réutilisables
+│   │   ├── Button.tsx
+│   │   ├── Card.tsx
+│   │   ├── Input.tsx
+│   │   ├── Modal.tsx
+│   │   └── Badge.tsx
+│   ├── crypto/
+│   │   ├── CryptoCard.tsx
+│   │   ├── CryptoTable.tsx
+│   │   ├── PriceChart.tsx
+│   │   └── MarketStats.tsx
+│   ├── dashboard/
+│   │   ├── DashboardHeader.tsx
+│   │   ├── WatchlistWidget.tsx
+│   │   └── AlertsWidget.tsx
+│   └── layout/
+│       ├── Navbar.tsx
+│       └── Sidebar.tsx
+│
+├── lib/
+│   ├── mongodb.ts                # Connexion MongoDB
+│   ├── auth.ts                   # Configuration NextAuth
+│   └── coingecko.ts              # Client API CoinGecko
+│
+├── models/
+│   ├── User.ts                   # Modèle Mongoose
+│   ├── Watchlist.ts
+│   └── Alert.ts
+│
+├── redux/
+│   ├── store.ts
+│   ├── slices/
+│   │   ├── watchlistSlice.ts
+│   │   ├── alertsSlice.ts
+│   │   └── userSlice.ts
+│   └── Provider.tsx
+│
+├── hooks/
+│   ├── useCryptoData.ts
+│   ├── useWatchlist.ts
+│   └── useAlerts.ts
+│
+├── types/
+│   └── index.ts                  # Types TypeScript globaux
+│
+├── .env.local                    # Variables d'environnement
+├── next.config.ts
+├── tailwind.config.ts
+└── package.json
+```
+
+---
+
+## Modèles MongoDB (Mongoose)
+
+### User
+```typescript
+{
+  _id: ObjectId,
+  nom: String,
+  email: String (unique),
+  password: String (hashé),
+  createdAt: Date
+}
+```
+
+### Watchlist
+```typescript
+{
+  userId: ObjectId (ref: User),
+  cryptos: [String],   // ex: ["bitcoin", "ethereum"]
+  updatedAt: Date
+}
+```
+
+### Alert
+```typescript
+{
+  userId: ObjectId (ref: User),
+  cryptoId: String,
+  cryptoSymbol: String,
+  targetPrice: Number,
+  condition: "above" | "below",
+  active: Boolean,
+  triggeredAt: Date | null,
+  createdAt: Date
+}
+```
+
+---
+
+## Installation et démarrage
+
+### Prérequis
+- Node.js >= 18
+- Compte MongoDB Atlas (gratuit)
+- Clé API CoinGecko (optionnelle pour le plan Pro)
+
+### Étapes
 
 ```bash
+# 1. Cloner le projet
+git clone https://github.com/votre-groupe/cryptowatch.git
+cd cryptowatch
+
+# 2. Installer les dépendances
 npm install
-```
 
-Create a local environment file:
-
-```bash
+# 3. Configurer les variables d'environnement
 cp .env.example .env.local
-```
+# Remplir les variables dans .env.local
 
-Set the required environment variables:
-
-```bash
-MONGODB_URI=
-NEXTAUTH_SECRET=
-NEXTAUTH_URL=http://localhost:3000
-```
-
-Run the development server:
-
-```bash
+# 4. Lancer en développement
 npm run dev
-```
 
-Open [http://localhost:3000](http://localhost:3000).
-
-## Scripts
-
-```bash
-npm run dev
+# 5. Build de production
 npm run build
-npm run start
-npm run lint
-npx tsc --noEmit
+npm start
 ```
 
-## Project Structure
+### Variables d'environnement (.env.local)
 
-```text
-app/
-  (auth)/
-    login/
-    register/
-  api/
-    auth/
-lib/
-  auth.ts
-  mongodb.ts
-models/
-redux/
-  slices/
-hooks/
-components/
-  crypto/
-  ui/
-types/
+```env
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/cryptowatch
+NEXTAUTH_SECRET=votre-secret-32-caracteres
+NEXTAUTH_URL=http://localhost:3000
+COINGECKO_API_KEY=votre-cle-api   # optionnel
 ```
 
-## Authentication
+---
 
-Authentication uses NextAuth.js with a credentials provider and JWT sessions. The shared `authOptions` live in `lib/auth.ts`, while the route handler is defined in `app/api/auth/[...nextauth]/route.ts`.
+## Concepts du cours appliqués
 
-The session exposes:
+| Concept (cours) | Application dans le projet |
+|---|---|
+| `let` / `const` (ES6) | Utilisés partout — jamais `var` |
+| Arrow functions | Composants React, callbacks, hooks |
+| Destructuring | Props, réponses API, state Redux |
+| Async / Await | Appels CoinGecko API, requêtes MongoDB |
+| Modules ES6 | Import/Export de composants et utils |
+| Composants React | CryptoCard, PriceChart, Navbar... |
+| Hooks React | useState, useEffect, useSelector, useDispatch |
+| Redux Toolkit | `createSlice`, `configureStore` pour watchlist et alertes |
+| Next.js SSR | Pages rendues côté serveur pour le SEO |
+| File-Based Routing | `app/watchlist/page.tsx` → `/watchlist` |
+| API Routes Next.js | `app/api/watchlist/route.ts` → backend |
 
-- `userId`
-- `email`
-- `name`
+---
 
-## Environment Variables
+## API externe — CoinGecko
 
-| Variable | Required | Description |
-| --- | --- | --- |
-| `MONGODB_URI` | Yes | MongoDB connection string |
-| `NEXTAUTH_SECRET` | Yes | Secret used by NextAuth.js |
-| `NEXTAUTH_URL` | Yes | Application URL used by NextAuth.js |
+Base URL : `https://api.coingecko.com/api/v3`
 
-## Current Phase
+| Endpoint | Usage |
+|---|---|
+| `/coins/markets` | Liste des cryptos avec prix |
+| `/coins/{id}` | Détail d'une crypto |
+| `/coins/{id}/market_chart` | Historique des prix |
+| `/search` | Recherche de cryptos |
+| `/global` | Statistiques globales du marché |
 
-The project is prepared for the next Redux and dashboard implementation phase. Authentication, MongoDB connection, login, register, and route protection foundations are in place.
+---
+
+## Guide de contribution (groupe G3)
+
+```
+feature/auth          → Authentification (inscription, connexion)
+feature/dashboard     → Tableau de bord et statistiques
+feature/watchlist     → Gestion de la watchlist
+feature/alerts        → Système d'alertes
+feature/charts        → Graphiques et visualisations
+feature/search        → Recherche et filtrage
+```
+
+Chaque membre travaille sur sa branche. Pull Request obligatoire avant merge sur `main`.
+
+---
+
+## Critères d'évaluation couverts
+
+- Intégration d'API externes (CoinGecko)
+- Gestion des appels asynchrones (async/await, fetch)
+- Graphiques interactifs (Recharts)
+- SSR avec Next.js (Server Side Rendering)
+- Gestion d'état global avec Redux Toolkit
+- Composants React réutilisables et dynamiques
+- Base de données MongoDB avec Mongoose
+- Authentification sécurisée
+
+---
+
+*CryptoWatch — Groupe G3 — 2025-2026*
