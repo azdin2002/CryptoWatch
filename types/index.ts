@@ -94,6 +94,24 @@ export interface SearchCoin {
   large: string;
 }
 
+export type AlertCondition = "above" | "below";
+
+export interface AlertData {
+  cryptoId: string;
+  cryptoSymbol: string;
+  cryptoName: string;
+  targetPrice: number;
+  condition: AlertCondition;
+}
+
+export interface AlertRecord extends AlertData {
+  id: string;
+  userId: string;
+  active: boolean;
+  triggeredAt: string | null;
+  createdAt: string;
+}
+
 export interface ApiResponse<T> {
   data: T | null;
   error: string | null;
