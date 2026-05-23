@@ -2,7 +2,7 @@ import bcrypt from "bcrypt";
 import { Document, Model, Schema, model, models } from "mongoose";
 
 export interface User {
-  nom: string;
+  name: string;
   email: string;
   password: string;
   createdAt: Date;
@@ -13,7 +13,7 @@ export interface UserDocument extends User, Document {
 }
 
 const userSchema = new Schema<UserDocument>({
-  nom: {
+  name: {
     type: String,
     required: true,
     trim: true,
@@ -35,8 +35,10 @@ const userSchema = new Schema<UserDocument>({
   },
 });
 
+const bcryptHashPattern = /^\$2[aby]\$\d{2}\$.{53}$/;
+
 userSchema.pre("save", async function hashPassword() {
-  if (!this.isModified("password")) {
+  if (!this.isModified("password") || bcryptHashPattern.test(this.password)) {
     return;
   }
 
