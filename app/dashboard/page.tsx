@@ -1,3 +1,5 @@
+import { AlertsList } from "@/components/alerts/AlertsList";
+import { SearchBar } from "@/components/SearchBar";
 import { CryptoTable } from "@/components/crypto/CryptoTable";
 import {
   CoinGeckoApiError,
@@ -78,18 +80,21 @@ export default async function DashboardPage() {
   return (
     <main className="min-h-screen bg-zinc-50 px-4 py-8 text-zinc-950 sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-8">
-        <header className="flex flex-col gap-3">
-          <p className="text-sm font-medium uppercase tracking-wide text-emerald-700">
-            CryptoWatch
-          </p>
-          <div>
-            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              Market Dashboard
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600 sm:text-base">
-              Live cryptocurrency market overview powered by CoinGecko.
+        <header className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="flex flex-col gap-3">
+            <p className="text-sm font-medium uppercase tracking-wide text-emerald-700">
+              CryptoWatch
             </p>
+            <div>
+              <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+                Market Dashboard
+              </h1>
+              <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600 sm:text-base">
+                Live cryptocurrency market overview powered by CoinGecko.
+              </p>
+            </div>
           </div>
+          <SearchBar />
         </header>
 
         <section
@@ -131,6 +136,8 @@ export default async function DashboardPage() {
           </div>
           <CryptoTable cryptos={cryptos} />
         </section>
+
+        <AlertsList />
       </div>
     </main>
   );

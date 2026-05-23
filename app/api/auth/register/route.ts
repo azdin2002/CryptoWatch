@@ -29,14 +29,6 @@ const getRegisterBody = async (
   }
 };
 
-const isDuplicateKeyError = (error: unknown): boolean => {
-  if (typeof error !== "object" || error === null || !("code" in error)) {
-    return false;
-  }
-
-  return error.code === 11000;
-};
-
 export const POST = async (request: NextRequest) => {
   const body = await getRegisterBody(request);
 
@@ -95,16 +87,12 @@ export const POST = async (request: NextRequest) => {
       { status: 201 },
     );
   } catch (error) {
-  console.error("REGISTER ERROR:", error);
-
-  return NextResponse.json(
-    {
-      error:
-        error instanceof Error
-          ? error.message
-          : "Unable to register user.",
-    },
-    { status: 500 },
-  );
-}
+    return NextResponse.json(
+      {
+        error:
+          error instanceof Error ? error.message : "Unable to register user.",
+      },
+      { status: 500 },
+    );
+  }
 };

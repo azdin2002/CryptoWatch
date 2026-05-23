@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 
 import { useWatchlist } from "@/hooks/useWatchlist";
@@ -279,6 +280,9 @@ export const CryptoTable = ({
                 isInWatchlist(cryptoId);
               const isSyncing =
                 watchlistLoading || syncingCryptoIds.has(cryptoId);
+              const cryptoHref = `/dashboard/crypto/${encodeURIComponent(
+                cryptoId,
+              )}`;
 
               return (
                 <tr
@@ -290,17 +294,26 @@ export const CryptoTable = ({
                   </td>
                   <td className="min-w-48 px-4 py-4">
                     <div className="flex items-center gap-3">
-                      <Image
-                        src={crypto.image}
-                        alt=""
-                        width={32}
-                        height={32}
-                        className="h-8 w-8 rounded-full"
-                      />
+                      <Link
+                        href={cryptoHref}
+                        aria-label={`View ${crypto.name} details`}
+                        className="shrink-0 cursor-pointer rounded-full transition-opacity hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                      >
+                        <Image
+                          src={crypto.image}
+                          alt={`${crypto.name} logo`}
+                          width={32}
+                          height={32}
+                          className="h-8 w-8 rounded-full"
+                        />
+                      </Link>
                       <div>
-                        <div className="font-medium text-zinc-950">
+                        <Link
+                          href={cryptoHref}
+                          className="cursor-pointer font-medium text-zinc-950 transition-colors hover:text-emerald-700 hover:underline focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                        >
                           {crypto.name}
-                        </div>
+                        </Link>
                         <div className="text-xs uppercase text-zinc-500 sm:hidden">
                           {crypto.symbol}
                         </div>
@@ -327,27 +340,35 @@ export const CryptoTable = ({
                     {formatCompactCurrency(crypto.total_volume)}
                   </td>
                   <td className="whitespace-nowrap px-4 py-4 text-right">
-                    <button
-                      type="button"
-                      disabled={isSyncing}
-                      onClick={() => {
-                        void handleWatchlistToggle(cryptoId);
-                      }}
-                      className={`inline-flex min-w-20 items-center justify-center rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 sm:min-w-32 sm:px-3 sm:py-2 ${
-                        isSaved
-                          ? "border border-zinc-300 bg-white text-zinc-700 hover:bg-red-50 hover:text-red-700"
-                          : "bg-emerald-600 text-white hover:bg-emerald-700"
-                      }`}
-                    >
-                      {isSyncing
-                        ? "Saving..."
-                        : isSaved
-                          ? "Remove"
-                          : "Add"}
-                      <span className="hidden sm:inline">
-                        {isSyncing || isSaved ? "" : " to Watchlist"}
-                      </span>
-                    </button>
+                    <div className="flex items-center justify-end gap-2">
+                      <Link
+                        href={cryptoHref}
+                        className="inline-flex items-center justify-center rounded-md border border-zinc-300 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 sm:px-3 sm:py-2"
+                      >
+                        View
+                      </Link>
+                      <button
+                        type="button"
+                        disabled={isSyncing}
+                        onClick={() => {
+                          void handleWatchlistToggle(cryptoId);
+                        }}
+                        className={`inline-flex min-w-20 items-center justify-center rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 sm:min-w-32 sm:px-3 sm:py-2 ${
+                          isSaved
+                            ? "border border-zinc-300 bg-white text-zinc-700 hover:bg-red-50 hover:text-red-700"
+                            : "bg-emerald-600 text-white hover:bg-emerald-700"
+                        }`}
+                      >
+                        {isSyncing
+                          ? "Saving..."
+                          : isSaved
+                            ? "Remove"
+                            : "Add"}
+                        <span className="hidden sm:inline">
+                          {isSyncing || isSaved ? "" : " to Watchlist"}
+                        </span>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
