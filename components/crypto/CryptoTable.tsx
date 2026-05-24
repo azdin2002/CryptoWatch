@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowDownUp, Eye, Minus, Plus } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -219,7 +220,7 @@ export const CryptoTable = ({
 
   if (loading) {
     return (
-      <div className="rounded-lg border border-zinc-200 bg-white p-6 text-sm text-zinc-600 shadow-sm">
+      <div className="rounded-2xl border border-zinc-200 bg-white/90 p-6 text-sm text-zinc-600 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/80 dark:text-zinc-400">
         Loading market data...
       </div>
     );
@@ -227,17 +228,17 @@ export const CryptoTable = ({
 
   if (error) {
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-sm text-red-700">
+      <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
         {error}
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white/95 shadow-xl shadow-zinc-200/50 transition-colors duration-300 dark:border-zinc-800 dark:bg-zinc-900/90 dark:shadow-black/25">
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-zinc-200 text-sm">
-          <thead className="bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500">
+        <table className="min-w-[760px] divide-y divide-zinc-200 text-sm dark:divide-zinc-800">
+          <thead className="bg-zinc-50/90 text-xs uppercase tracking-wide text-zinc-500 dark:bg-zinc-950/70 dark:text-zinc-400">
             <tr>
               {columns.map((column) => (
                 <th
@@ -250,7 +251,7 @@ export const CryptoTable = ({
                   <button
                     type="button"
                     onClick={() => handleSort(column.field)}
-                    className={`inline-flex items-center gap-1 transition-colors hover:text-zinc-900 ${
+                    className={`inline-flex items-center gap-1.5 transition-colors hover:text-zinc-900 dark:hover:text-zinc-100 ${
                       column.align === "right" ? "justify-end" : "justify-start"
                     }`}
                   >
@@ -259,7 +260,9 @@ export const CryptoTable = ({
                       <span aria-hidden="true">
                         {sortDirection === "asc" ? "▲" : "▼"}
                       </span>
-                    ) : null}
+                    ) : (
+                      <ArrowDownUp className="h-3 w-3 opacity-40" aria-hidden="true" />
+                    )}
                   </button>
                 </th>
               ))}
@@ -271,7 +274,7 @@ export const CryptoTable = ({
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-100 bg-white">
+          <tbody className="divide-y divide-zinc-100 bg-white dark:divide-zinc-800 dark:bg-zinc-900">
             {sortedCryptos.map((crypto) => {
               const change = crypto.price_change_percentage_24h;
               const isPositive = change !== null && change >= 0;
@@ -288,9 +291,9 @@ export const CryptoTable = ({
               return (
                 <tr
                   key={crypto.id}
-                  className="transition-colors hover:bg-zinc-50"
+                  className="transition-colors duration-200 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/20"
                 >
-                  <td className="whitespace-nowrap px-4 py-4 text-zinc-600">
+                  <td className="whitespace-nowrap px-4 py-4 text-zinc-600 dark:text-zinc-400">
                     {crypto.market_cap_rank ?? "N/A"}
                   </td>
                   <td className="min-w-48 px-4 py-4">
@@ -298,7 +301,7 @@ export const CryptoTable = ({
                       <Link
                         href={cryptoHref}
                         aria-label={`View ${crypto.name} details`}
-                        className="shrink-0 cursor-pointer rounded-full transition-opacity hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                        className="shrink-0 cursor-pointer rounded-full transition-all duration-200 hover:-translate-y-0.5 hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-zinc-900"
                       >
                         <Image
                           src={crypto.image}
@@ -311,42 +314,45 @@ export const CryptoTable = ({
                       <div>
                         <Link
                           href={cryptoHref}
-                          className="cursor-pointer font-medium text-zinc-950 transition-colors hover:text-emerald-700 hover:underline focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
+                          className="cursor-pointer font-medium text-zinc-950 transition-colors hover:text-emerald-700 hover:underline focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-white dark:text-zinc-50 dark:hover:text-emerald-300 dark:focus:ring-offset-zinc-900"
                         >
                           {crypto.name}
                         </Link>
-                        <div className="text-xs uppercase text-zinc-500 sm:hidden">
+                        <div className="text-xs uppercase text-zinc-500 dark:text-zinc-400 sm:hidden">
                           {crypto.symbol}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="hidden whitespace-nowrap px-4 py-4 uppercase text-zinc-600 sm:table-cell">
+                  <td className="hidden whitespace-nowrap px-4 py-4 uppercase text-zinc-600 dark:text-zinc-400 sm:table-cell">
                     {crypto.symbol}
                   </td>
-                  <td className="whitespace-nowrap px-4 py-4 text-right font-medium text-zinc-950">
+                  <td className="whitespace-nowrap px-4 py-4 text-right font-medium text-zinc-950 dark:text-zinc-50">
                     {formatCurrency(crypto.current_price)}
                   </td>
                   <td
                     className={`hidden whitespace-nowrap px-4 py-4 text-right font-medium sm:table-cell ${
-                      isPositive ? "text-emerald-600" : "text-red-600"
+                      isPositive
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-red-600 dark:text-red-400"
                     }`}
                   >
                     {formatPercentage(change)}
                   </td>
-                  <td className="hidden whitespace-nowrap px-4 py-4 text-right text-zinc-700 md:table-cell">
+                  <td className="hidden whitespace-nowrap px-4 py-4 text-right text-zinc-700 dark:text-zinc-300 md:table-cell">
                     {formatCompactCurrency(crypto.market_cap)}
                   </td>
-                  <td className="hidden whitespace-nowrap px-4 py-4 text-right text-zinc-700 lg:table-cell">
+                  <td className="hidden whitespace-nowrap px-4 py-4 text-right text-zinc-700 dark:text-zinc-300 lg:table-cell">
                     {formatCompactCurrency(crypto.total_volume)}
                   </td>
                   <td className="whitespace-nowrap px-4 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       <Link
                         href={cryptoHref}
-                        className="inline-flex items-center justify-center rounded-md border border-zinc-300 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 sm:px-3 sm:py-2"
+                        className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-zinc-300 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-700 transition-all duration-200 hover:-translate-y-0.5 hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-white dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-emerald-800 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-300 dark:focus:ring-offset-zinc-900 sm:px-3 sm:py-2"
                       >
-                        View
+                        <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                        <span>View</span>
                       </Link>
                       <button
                         type="button"
@@ -354,12 +360,17 @@ export const CryptoTable = ({
                         onClick={() => {
                           void handleWatchlistToggle(cryptoId);
                         }}
-                        className={`inline-flex min-w-20 items-center justify-center rounded-md px-2.5 py-1.5 text-xs font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 sm:min-w-32 sm:px-3 sm:py-2 ${
+                        className={`inline-flex min-w-24 items-center justify-center gap-1.5 rounded-xl px-2.5 py-1.5 text-xs font-medium transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-60 sm:min-w-36 sm:px-3 sm:py-2 ${
                           isSaved
-                            ? "border border-zinc-300 bg-white text-zinc-700 hover:bg-red-50 hover:text-red-700"
-                            : "bg-emerald-600 text-white hover:bg-emerald-700"
+                            ? "border border-zinc-300 bg-white text-zinc-700 hover:bg-red-50 hover:text-red-700 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-red-950/30 dark:hover:text-red-300"
+                            : "bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-500 hover:to-teal-500"
                         }`}
                       >
+                        {isSaved ? (
+                          <Minus className="h-3.5 w-3.5" aria-hidden="true" />
+                        ) : (
+                          <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+                        )}
                         {isSyncing
                           ? "Saving..."
                           : isSaved

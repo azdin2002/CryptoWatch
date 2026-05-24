@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { BarChart3, LineChart, TrendingUp, Wallet } from "lucide-react";
 
 import { PriceAlertForm } from "@/components/crypto/PriceAlertForm";
 import { PriceChart } from "@/components/crypto/PriceChart";
@@ -49,10 +50,12 @@ const formatPercentage = (value: number | null | undefined): string =>
 
 const getChangeClassName = (value: number | null | undefined): string => {
   if (typeof value !== "number") {
-    return "text-zinc-600";
+    return "text-zinc-600 dark:text-zinc-400";
   }
 
-  return value >= 0 ? "text-emerald-600" : "text-red-600";
+  return value >= 0
+    ? "text-emerald-600 dark:text-emerald-400"
+    : "text-red-600 dark:text-red-400";
 };
 
 const getCryptoDetail = async (id: string): Promise<CryptoDetail> => {
@@ -98,10 +101,36 @@ export default async function CryptoDetailPage({
   const volume = marketData.total_volume.usd;
   const change24h = marketData.price_change_percentage_24h;
   const change7d = marketData.price_change_percentage_7d;
+  const metrics = [
+    {
+      label: "Market Cap",
+      value: formatCompactCurrency(marketCap),
+      icon: Wallet,
+      valueClassName: "text-zinc-950 dark:text-zinc-50",
+    },
+    {
+      label: "24h Change",
+      value: formatPercentage(change24h),
+      icon: TrendingUp,
+      valueClassName: getChangeClassName(change24h),
+    },
+    {
+      label: "7d Change",
+      value: formatPercentage(change7d),
+      icon: LineChart,
+      valueClassName: getChangeClassName(change7d),
+    },
+    {
+      label: "24h Volume",
+      value: formatCompactCurrency(volume),
+      icon: BarChart3,
+      valueClassName: "text-zinc-950 dark:text-zinc-50",
+    },
+  ];
 
   return (
     <>
-      <div className="flex flex-col gap-6 rounded-lg border border-zinc-200 bg-white p-5 shadow-sm sm:p-6 lg:flex-row lg:items-start lg:justify-between">
+      <div className="flex flex-col gap-6 rounded-2xl border border-zinc-200 bg-white/95 p-5 shadow-xl shadow-zinc-200/50 dark:border-zinc-800 dark:bg-zinc-900/90 dark:shadow-black/25 sm:p-6 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
           <Image
             src={crypto.image.large}
@@ -109,14 +138,14 @@ export default async function CryptoDetailPage({
             width={88}
             height={88}
             priority
-            className="h-20 w-20 rounded-full sm:h-22 sm:w-22"
+            className="h-20 w-20 rounded-full shadow-lg shadow-zinc-950/10 ring-4 ring-white dark:ring-zinc-800 sm:h-22 sm:w-22"
           />
           <div>
             <div className="flex flex-wrap items-center gap-3">
               <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
                 {crypto.name}
               </h1>
-              <span className="rounded-md bg-zinc-100 px-2.5 py-1 text-sm font-semibold uppercase text-zinc-600">
+              <span className="rounded-lg bg-zinc-100 px-2.5 py-1 text-sm font-semibold uppercase text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
                 {crypto.symbol}
               </span>
             </div>
@@ -124,7 +153,7 @@ export default async function CryptoDetailPage({
               {formatCurrency(price)}
             </p>
             {crypto.market_cap_rank ? (
-              <p className="mt-2 text-sm text-zinc-500">
+              <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
                 Market rank #{crypto.market_cap_rank}
               </p>
             ) : null}
@@ -137,38 +166,28 @@ export default async function CryptoDetailPage({
         aria-label={`${crypto.name} market metrics`}
         className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
       >
-        <div className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-zinc-500">Market Cap</p>
-          <p className="mt-2 text-2xl font-semibold">
-            {formatCompactCurrency(marketCap)}
-          </p>
-        </div>
-        <div className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-zinc-500">24h Change</p>
-          <p
-            className={`mt-2 text-2xl font-semibold ${getChangeClassName(
-              change24h,
-            )}`}
-          >
-            {formatPercentage(change24h)}
-          </p>
-        </div>
-        <div className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-zinc-500">7d Change</p>
-          <p
-            className={`mt-2 text-2xl font-semibold ${getChangeClassName(
-              change7d,
-            )}`}
-          >
-            {formatPercentage(change7d)}
-          </p>
-        </div>
-        <div className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
-          <p className="text-sm text-zinc-500">24h Volume</p>
-          <p className="mt-2 text-2xl font-semibold">
-            {formatCompactCurrency(volume)}
-          </p>
-        </div>
+        {metrics.map((metric) => {
+          const Icon = metric.icon;
+
+          return (
+            <div
+              key={metric.label}
+              className="group rounded-2xl border border-zinc-200 bg-white/95 p-5 shadow-lg shadow-zinc-200/50 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl dark:border-zinc-800 dark:bg-zinc-900/90 dark:shadow-black/20"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  {metric.label}
+                </p>
+                <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 transition-transform duration-200 group-hover:scale-105 dark:bg-emerald-950/40 dark:text-emerald-300">
+                  <Icon className="h-5 w-5" aria-hidden="true" />
+                </span>
+              </div>
+              <p className={`mt-3 text-2xl font-semibold ${metric.valueClassName}`}>
+                {metric.value}
+              </p>
+            </div>
+          );
+        })}
       </section>
 
       <PriceChart cryptoId={crypto.id} cryptoName={crypto.name} />
@@ -180,14 +199,14 @@ export default async function CryptoDetailPage({
         currentPrice={price}
       />
 
-      <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm sm:p-6">
+      <section className="rounded-2xl border border-zinc-200 bg-white/95 p-5 shadow-xl shadow-zinc-200/50 dark:border-zinc-800 dark:bg-zinc-900/90 dark:shadow-black/25 sm:p-6">
         <h2 className="text-xl font-semibold">About {crypto.name}</h2>
         {description ? (
-          <p className="mt-3 max-w-4xl text-sm leading-7 text-zinc-700 sm:text-base">
+          <p className="mt-3 max-w-4xl text-sm leading-7 text-zinc-700 dark:text-zinc-300 sm:text-base">
             {description}
           </p>
         ) : (
-          <p className="mt-3 text-sm text-zinc-600">
+          <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">
             No description is available from CoinGecko for this asset.
           </p>
         )}

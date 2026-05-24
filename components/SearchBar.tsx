@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { Search } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -188,6 +189,10 @@ export const SearchBar = () => {
       <label htmlFor="crypto-search" className="sr-only">
         Search cryptocurrencies
       </label>
+      <Search
+        className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400 dark:text-zinc-500"
+        aria-hidden="true"
+      />
       <input
         ref={inputRef}
         id="crypto-search"
@@ -219,15 +224,15 @@ export const SearchBar = () => {
         }
         autoComplete="off"
         placeholder="Search crypto by name or symbol"
-        className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 text-sm text-zinc-950 shadow-sm outline-none transition-colors placeholder:text-zinc-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+        className="h-11 w-full rounded-xl border border-zinc-300 bg-white/95 px-4 py-3 pl-10 text-sm text-zinc-950 shadow-sm outline-none transition-all duration-200 placeholder:text-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-800 dark:bg-zinc-900/90 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-emerald-600 dark:focus:ring-emerald-950"
       />
 
       {showDropdown ? (
-        <div className="absolute left-0 right-0 z-20 mt-2 overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-lg">
+        <div className="absolute left-0 right-0 z-20 mt-2 overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-xl shadow-zinc-200/60 dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black/30">
           {loading ? (
-            <div className="px-4 py-3 text-sm text-zinc-600">Searching...</div>
+            <div className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">Searching...</div>
           ) : results.length === 0 ? (
-            <div className="px-4 py-3 text-sm text-zinc-600">
+            <div className="px-4 py-3 text-sm text-zinc-600 dark:text-zinc-400">
               No matching cryptocurrencies found.
             </div>
           ) : (
@@ -248,7 +253,9 @@ export const SearchBar = () => {
                     onMouseEnter={() => setActiveIndex(index)}
                     onClick={() => navigateToCrypto(result.id)}
                     className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors ${
-                      activeIndex === index ? "bg-zinc-100" : "hover:bg-zinc-50"
+                      activeIndex === index
+                        ? "bg-emerald-50 dark:bg-emerald-950/30"
+                        : "hover:bg-zinc-50 dark:hover:bg-zinc-800"
                     }`}
                   >
                     <Image
@@ -259,15 +266,15 @@ export const SearchBar = () => {
                       className="h-7 w-7 rounded-full"
                     />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium text-zinc-950">
+                      <span className="block truncate text-sm font-medium text-zinc-950 dark:text-zinc-50">
                         {result.name}
                       </span>
-                      <span className="block text-xs uppercase text-zinc-500">
+                      <span className="block text-xs uppercase text-zinc-500 dark:text-zinc-400">
                         {result.symbol}
                       </span>
                     </span>
                     {result.market_cap_rank ? (
-                      <span className="shrink-0 rounded-md bg-zinc-100 px-2 py-1 text-xs text-zinc-600">
+                      <span className="shrink-0 rounded-md bg-zinc-100 px-2 py-1 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
                         #{result.market_cap_rank}
                       </span>
                     ) : null}

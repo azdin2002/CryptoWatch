@@ -130,14 +130,14 @@ export default function WatchlistPage() {
   return (
     <>
       <header className="flex flex-col gap-3">
-        <p className="text-sm font-medium uppercase tracking-wide text-emerald-700">
+        <p className="text-sm font-medium uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
           Portfolio
         </p>
         <div>
           <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
             Watchlist
           </h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600 sm:text-base">
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600 dark:text-zinc-400 sm:text-base">
             Your saved cryptocurrencies with quick access to details and
             watchlist controls.
           </p>
@@ -145,11 +145,11 @@ export default function WatchlistPage() {
       </header>
 
       {!hasSavedCryptos && !watchlistLoading ? (
-        <section className="rounded-lg border border-dashed border-zinc-300 bg-white p-8 text-center shadow-sm">
-          <h2 className="text-lg font-semibold text-zinc-950">
+        <section className="rounded-2xl border border-dashed border-zinc-300 bg-white/90 p-8 text-center shadow-lg shadow-zinc-200/50 dark:border-zinc-700 dark:bg-zinc-900/80 dark:shadow-black/20">
+          <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
             Your watchlist is empty
           </h2>
-          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-zinc-600">
+          <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-zinc-600 dark:text-zinc-400">
             Add coins from the market dashboard or a crypto detail page to see
             them here.
           </p>

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { BellPlus } from "lucide-react";
 import { toast } from "sonner";
 
 import { useAlerts } from "@/hooks/useAlerts";
@@ -93,22 +94,29 @@ export const PriceAlertForm = ({
   };
 
   return (
-    <section className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm sm:p-6">
-      <div className="flex flex-col gap-1">
-        <p className="text-sm font-medium text-zinc-500">Price alert</p>
-        <h2 className="text-xl font-semibold text-zinc-950">
-          Create {normalizedSymbol} alert
-        </h2>
-        <p className="text-sm text-zinc-600">
-          Current price: {currentPriceLabel}
-        </p>
+    <section className="rounded-2xl border border-zinc-200 bg-white/95 p-5 shadow-xl shadow-zinc-200/50 dark:border-zinc-800 dark:bg-zinc-900/90 dark:shadow-black/25 sm:p-6">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-1">
+          <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">
+            Price alert
+          </p>
+          <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
+            Create {normalizedSymbol} alert
+          </h2>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            Current price: {currentPriceLabel}
+          </p>
+        </div>
+        <span className="hidden h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 sm:flex">
+          <BellPlus className="h-5 w-5" aria-hidden="true" />
+        </span>
       </div>
 
       <form onSubmit={handleSubmit} className="mt-5 grid gap-4 sm:grid-cols-3">
         <div className="sm:col-span-1">
           <label
             htmlFor="alert-condition"
-            className="block text-sm font-medium text-zinc-700"
+            className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
           >
             Condition
           </label>
@@ -118,7 +126,7 @@ export const PriceAlertForm = ({
             onChange={(event) =>
               setCondition(event.target.value as AlertCondition)
             }
-            className="mt-2 w-full rounded-md border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-950 shadow-sm outline-none transition-colors focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+            className="mt-2 h-11 w-full rounded-xl border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-950 shadow-sm outline-none transition-all duration-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-emerald-600 dark:focus:ring-emerald-950"
           >
             <option value="above">Above</option>
             <option value="below">Below</option>
@@ -128,7 +136,7 @@ export const PriceAlertForm = ({
         <div className="sm:col-span-1">
           <label
             htmlFor="alert-target-price"
-            className="block text-sm font-medium text-zinc-700"
+            className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
           >
             Target price
           </label>
@@ -141,7 +149,7 @@ export const PriceAlertForm = ({
             value={targetPrice}
             onChange={(event) => setTargetPrice(event.target.value)}
             placeholder="0.00"
-            className="mt-2 w-full rounded-md border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-950 shadow-sm outline-none transition-colors placeholder:text-zinc-400 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+            className="mt-2 h-11 w-full rounded-xl border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-950 shadow-sm outline-none transition-all duration-200 placeholder:text-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-emerald-600 dark:focus:ring-emerald-950"
           />
         </div>
 
@@ -149,13 +157,13 @@ export const PriceAlertForm = ({
           <button
             type="submit"
             disabled={submitting}
-            className="inline-flex w-full items-center justify-center rounded-md bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:from-emerald-500 hover:to-teal-500 hover:shadow-md disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-60"
           >
+            <BellPlus className="h-4 w-4" aria-hidden="true" />
             {submitting ? "Creating..." : "Create alert"}
           </button>
         </div>
       </form>
-
     </section>
   );
 };

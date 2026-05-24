@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { NotificationToaster } from "@/components/layout/NotificationToaster";
+import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import { ReduxProvider } from "@/redux/Provider";
 
 import "./globals.css";
@@ -29,13 +30,16 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
-        <ReduxProvider>
-          {children}
-          <NotificationToaster />
-        </ReduxProvider>
+      <body className="min-h-full flex flex-col bg-background text-foreground">
+        <ThemeProvider>
+          <ReduxProvider>
+            {children}
+            <NotificationToaster />
+          </ReduxProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

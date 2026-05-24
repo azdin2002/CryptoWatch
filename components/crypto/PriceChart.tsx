@@ -10,6 +10,7 @@ import {
   YAxis,
 } from "recharts";
 import type { TooltipContentProps } from "recharts";
+import { useTheme } from "next-themes";
 import { toast } from "sonner";
 
 import { getToastErrorMessage } from "@/lib/toasts";
@@ -108,9 +109,9 @@ const ChartTooltip = ({
   }
 
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm shadow-lg">
-      <p className="font-medium text-zinc-950">{formatPrice(price)}</p>
-      <p className="mt-1 text-xs text-zinc-500">
+    <div className="rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm shadow-xl dark:border-zinc-800 dark:bg-zinc-950">
+      <p className="font-medium text-zinc-950 dark:text-zinc-50">{formatPrice(price)}</p>
+      <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
         {tooltipDateFormatter.format(new Date(timestamp))}
       </p>
     </div>
@@ -118,6 +119,7 @@ const ChartTooltip = ({
 };
 
 export const PriceChart = ({ cryptoId, cryptoName }: PriceChartProps) => {
+  const { resolvedTheme } = useTheme();
   const [period, setPeriod] = useState<ChartPeriod>("7");
   const [points, setPoints] = useState<ChartPoint[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -207,26 +209,31 @@ export const PriceChart = ({ cryptoId, cryptoName }: PriceChartProps) => {
     return [Math.max(0, min - padding), max + padding];
   }, [points]);
 
+  const darkMode = resolvedTheme === "dark";
+  const axisColor = darkMode ? "#a1a1aa" : "#71717a";
+  const cursorColor = darkMode ? "#3f3f46" : "#d4d4d8";
+  const lineColor = darkMode ? "#34d399" : "#059669";
+
   return (
-    <section className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm sm:p-6">
+    <section className="rounded-2xl border border-zinc-200 bg-white/95 p-4 shadow-xl shadow-zinc-200/50 transition-colors duration-300 dark:border-zinc-800 dark:bg-zinc-900/90 dark:shadow-black/25 sm:p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="text-sm font-medium text-zinc-500">Price history</p>
-          <h2 className="mt-1 text-xl font-semibold text-zinc-950">
+          <p className="text-sm font-medium text-zinc-500 dark:text-zinc-400">Price history</p>
+          <h2 className="mt-1 text-xl font-semibold text-zinc-950 dark:text-zinc-50">
             {cryptoName} USD chart
           </h2>
         </div>
-        <div className="grid grid-cols-4 gap-2 rounded-lg bg-zinc-100 p-1">
+        <div className="grid grid-cols-4 gap-1 rounded-xl bg-zinc-100 p-1 dark:bg-zinc-950">
           {periods.map((item) => (
             <button
               key={item.value}
               type="button"
               onClick={() => setPeriod(item.value)}
               disabled={loading && period === item.value}
-              className={`rounded-md px-3 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed ${
+              className={`rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 disabled:cursor-not-allowed ${
                 period === item.value
-                  ? "bg-white text-zinc-950 shadow-sm"
-                  : "text-zinc-600 hover:bg-white/70 hover:text-zinc-950"
+                  ? "bg-white text-zinc-950 shadow-sm dark:bg-zinc-800 dark:text-zinc-50"
+                  : "text-zinc-600 hover:bg-white/70 hover:text-zinc-950 dark:text-zinc-400 dark:hover:bg-zinc-800/70 dark:hover:text-zinc-50"
               }`}
               aria-pressed={period === item.value}
             >
@@ -236,17 +243,17 @@ export const PriceChart = ({ cryptoId, cryptoName }: PriceChartProps) => {
         </div>
       </div>
 
-      <div className="mt-6 h-72 sm:h-80">
+      <div className="mt-6 h-72 sm:h-80 lg:h-96">
         {loading ? (
-          <div className="flex h-full items-center justify-center rounded-lg bg-zinc-50 text-sm text-zinc-600">
+          <div className="flex h-full items-center justify-center rounded-xl bg-zinc-50 text-sm text-zinc-600 dark:bg-zinc-950 dark:text-zinc-400">
             Loading chart data...
           </div>
         ) : error ? (
-          <div className="flex h-full items-center justify-center rounded-lg border border-red-200 bg-red-50 px-4 text-center text-sm text-red-700">
+          <div className="flex h-full items-center justify-center rounded-xl border border-red-200 bg-red-50 px-4 text-center text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
             {error}
           </div>
         ) : points.length === 0 ? (
-          <div className="flex h-full items-center justify-center rounded-lg bg-zinc-50 px-4 text-center text-sm text-zinc-600">
+          <div className="flex h-full items-center justify-center rounded-xl bg-zinc-50 px-4 text-center text-sm text-zinc-600 dark:bg-zinc-950 dark:text-zinc-400">
             No historical price data is available for this period.
           </div>
         ) : (
@@ -262,7 +269,7 @@ export const PriceChart = ({ cryptoId, cryptoName }: PriceChartProps) => {
                 tickMargin={12}
                 minTickGap={28}
                 tickFormatter={(value: number) => getDateLabel(value, period)}
-                stroke="#71717a"
+                stroke={axisColor}
                 fontSize={12}
               />
               <YAxis
@@ -272,20 +279,20 @@ export const PriceChart = ({ cryptoId, cryptoName }: PriceChartProps) => {
                 width={72}
                 domain={chartDomain}
                 tickFormatter={formatAxisPrice}
-                stroke="#71717a"
+                stroke={axisColor}
                 fontSize={12}
               />
               <Tooltip
-                cursor={{ stroke: "#d4d4d8", strokeWidth: 1 }}
+                cursor={{ stroke: cursorColor, strokeWidth: 1 }}
                 content={(props: TooltipContentProps) => <ChartTooltip {...props} />}
               />
               <Line
                 type="monotone"
                 dataKey="price"
-                stroke="#059669"
+                stroke={lineColor}
                 strokeWidth={2.5}
                 dot={false}
-                activeDot={{ r: 4, strokeWidth: 0, fill: "#059669" }}
+                activeDot={{ r: 4, strokeWidth: 0, fill: lineColor }}
                 isAnimationActive
               />
             </LineChart>
