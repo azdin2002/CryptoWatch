@@ -6,6 +6,7 @@ import {
   getGlobalStats,
   getMarketChart,
   getMarkets,
+  getMarketsByIds,
   searchCoins,
 } from "@/lib/coingecko";
 import type {
@@ -65,6 +66,23 @@ const getPage = (request: NextRequest): number => {
   return Number.isInteger(page) && page > 0 ? page : 1;
 };
 
+const getCryptoIds = (request: NextRequest): string[] => {
+  const ids = request.nextUrl.searchParams.get("ids")?.trim();
+
+  if (!ids) {
+    return [];
+  }
+
+  return Array.from(
+    new Set(
+      ids
+        .split(",")
+        .map((id) => id.trim().toLowerCase())
+        .filter(Boolean),
+    ),
+  );
+};
+
 const handleRouteError = (error: unknown): NextResponse<ApiResponse<null>> => {
   if (error instanceof CoinGeckoApiError) {
     const status =
@@ -81,7 +99,12 @@ const handleRouteError = (error: unknown): NextResponse<ApiResponse<null>> => {
 const handleMarkets = async (
   request: NextRequest,
 ): Promise<NextResponse<ApiResponse<CryptoMarket[]>>> => {
-  const markets = await getMarkets(getPage(request));
+  const ids = getCryptoIds(request);
+  const markets =
+    ids.length > 0
+      ? await getMarketsByIds(ids)
+      : await getMarkets(getPage(request));
+
   return jsonResponse<CryptoMarket[]>(markets, 200);
 };
 
@@ -162,4 +185,3 @@ export const GET = async (
     return handleRouteError(error);
   }
 };
-

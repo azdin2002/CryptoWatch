@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 import { useAlerts } from "@/hooks/useAlerts";
+import { getToastErrorMessage } from "@/lib/toasts";
 import type { AlertRecord } from "@/types";
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
@@ -17,6 +20,9 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
 });
 
+const ALERT_EMAIL_TOAST_STORAGE_KEY = "cryptowatch-alert-email-toasts";
+const RECENT_TRIGGER_WINDOW_MS = 10 * 60 * 1_000;
+
 const formatAlertDate = (value: string): string => {
   const date = new Date(value);
 
@@ -28,19 +34,86 @@ const getConditionLabel = (alert: AlertRecord): string =>
     alert.targetPrice,
   )}`;
 
+const readSeenAlertToastIds = (): Set<string> => {
+  const rawValue = window.localStorage.getItem(ALERT_EMAIL_TOAST_STORAGE_KEY);
+
+  if (!rawValue) {
+    return new Set();
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(rawValue);
+
+    if (!Array.isArray(parsed)) {
+      return new Set();
+    }
+
+    return new Set(
+      parsed.filter((value): value is string => typeof value === "string"),
+    );
+  } catch {
+    return new Set();
+  }
+};
+
+const writeSeenAlertToastIds = (seenAlertIds: Set<string>): void => {
+  window.localStorage.setItem(
+    ALERT_EMAIL_TOAST_STORAGE_KEY,
+    JSON.stringify(Array.from(seenAlertIds).slice(-100)),
+  );
+};
+
+const isRecentlyTriggered = (alert: AlertRecord): boolean => {
+  if (alert.active || !alert.triggeredAt) {
+    return false;
+  }
+
+  const triggeredAt = new Date(alert.triggeredAt).getTime();
+
+  return (
+    Number.isFinite(triggeredAt) &&
+    Date.now() - triggeredAt <= RECENT_TRIGGER_WINDOW_MS
+  );
+};
+
 export const AlertsList = () => {
-  const { alerts, loading, error, removePriceAlert } = useAlerts();
+  const { alerts, loading, removePriceAlert } = useAlerts();
   const [removingAlertIds, setRemovingAlertIds] = useState<Set<string>>(
     () => new Set(),
   );
-  const [localError, setLocalError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const recentTriggeredAlerts = alerts.filter(isRecentlyTriggered);
+
+    if (recentTriggeredAlerts.length === 0) {
+      return;
+    }
+
+    const seenAlertIds = readSeenAlertToastIds();
+    let changed = false;
+
+    recentTriggeredAlerts.forEach((alert) => {
+      if (seenAlertIds.has(alert.id)) {
+        return;
+      }
+
+      toast.success(`Alert email sent for ${alert.cryptoName}.`, {
+        id: `alert-email-sent-${alert.id}`,
+      });
+      seenAlertIds.add(alert.id);
+      changed = true;
+    });
+
+    if (changed) {
+      writeSeenAlertToastIds(seenAlertIds);
+    }
+  }, [alerts]);
 
   const handleRemove = async (alertId: string): Promise<void> => {
     if (removingAlertIds.has(alertId)) {
       return;
     }
 
-    setLocalError(null);
     setRemovingAlertIds((current) => {
       const next = new Set(current);
       next.add(alertId);
@@ -49,15 +122,9 @@ export const AlertsList = () => {
 
     try {
       await removePriceAlert(alertId);
+      toast.success("Alert removed.");
     } catch (removeError) {
-      const message =
-        typeof removeError === "string"
-          ? removeError
-          : removeError instanceof Error
-            ? removeError.message
-            : "Unable to remove alert.";
-
-      setLocalError(message);
+      toast.error(getToastErrorMessage(removeError, "Unable to remove alert."));
     } finally {
       setRemovingAlertIds((current) => {
         const next = new Set(current);
@@ -68,60 +135,54 @@ export const AlertsList = () => {
   };
 
   return (
-    <section className="rounded-lg border border-zinc-200 bg-white shadow-sm">
-      <div className="border-b border-zinc-200 px-5 py-4 sm:px-6">
-        <h2 className="text-xl font-semibold text-zinc-950">Price Alerts</h2>
-        <p className="mt-1 text-sm text-zinc-600">
+    <section className="rounded-2xl border border-zinc-200 bg-white/95 shadow-xl shadow-zinc-200/50 dark:border-zinc-800 dark:bg-zinc-900/90 dark:shadow-black/25">
+      <div className="border-b border-zinc-200 px-5 py-4 dark:border-zinc-800 sm:px-6">
+        <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">Price Alerts</h2>
+        <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
           Saved thresholds for your tracked cryptocurrencies.
         </p>
       </div>
 
-      {localError || error ? (
-        <div className="border-b border-red-100 bg-red-50 px-5 py-3 text-sm text-red-700 sm:px-6">
-          {localError ?? error}
-        </div>
-      ) : null}
-
       {loading && alerts.length === 0 ? (
-        <div className="px-5 py-6 text-sm text-zinc-600 sm:px-6">
+        <div className="px-5 py-6 text-sm text-zinc-600 dark:text-zinc-400 sm:px-6">
           Loading alerts...
         </div>
       ) : alerts.length === 0 ? (
-        <div className="px-5 py-8 text-sm text-zinc-600 sm:px-6">
+        <div className="px-5 py-8 text-sm text-zinc-600 dark:text-zinc-400 sm:px-6">
           No price alerts yet.
         </div>
       ) : (
-        <ul className="divide-y divide-zinc-100">
+        <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
           {alerts.map((alert) => {
             const isRemoving = removingAlertIds.has(alert.id);
 
             return (
               <li
                 key={alert.id}
-                className="flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6"
+                className="flex flex-col gap-4 px-5 py-4 transition-colors duration-200 hover:bg-emerald-50/40 dark:hover:bg-emerald-950/20 sm:flex-row sm:items-center sm:justify-between sm:px-6"
               >
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium text-zinc-950">
+                    <p className="font-medium text-zinc-950 dark:text-zinc-50">
                       {alert.cryptoName}
                     </p>
-                    <span className="rounded-md bg-zinc-100 px-2 py-1 text-xs font-semibold uppercase text-zinc-600">
+                    <span className="rounded-lg bg-zinc-100 px-2 py-1 text-xs font-semibold uppercase text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
                       {alert.cryptoSymbol}
                     </span>
                     <span
-                      className={`rounded-md px-2 py-1 text-xs font-medium ${
+                      className={`rounded-lg px-2 py-1 text-xs font-medium ${
                         alert.active
-                          ? "bg-emerald-50 text-emerald-700"
-                          : "bg-zinc-100 text-zinc-600"
+                          ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300"
+                          : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
                       }`}
                     >
                       {alert.active ? "Active" : "Triggered"}
                     </span>
                   </div>
-                  <p className="mt-2 text-sm text-zinc-700">
+                  <p className="mt-2 text-sm text-zinc-700 dark:text-zinc-300">
                     {getConditionLabel(alert)}
                   </p>
-                  <p className="mt-1 text-xs text-zinc-500">
+                  <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                     Created {formatAlertDate(alert.createdAt)}
                   </p>
                 </div>
@@ -132,8 +193,9 @@ export const AlertsList = () => {
                   onClick={() => {
                     void handleRemove(alert.id);
                   }}
-                  className="inline-flex items-center justify-center rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-red-50 hover:text-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:bg-red-50 hover:text-red-700 hover:shadow-md disabled:cursor-not-allowed disabled:translate-y-0 disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:bg-red-950/30 dark:hover:text-red-300"
                 >
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
                   {isRemoving ? "Removing..." : "Remove"}
                 </button>
               </li>

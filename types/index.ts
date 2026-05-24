@@ -116,3 +116,13 @@ export interface ApiResponse<T> {
   data: T | null;
   error: string | null;
 }
+
+export interface ProfileRecord {
+  name: string;
+  email: string;
+}
+
+export interface ProfileUpdateData {
+  name: string;
+  password?: string;
+}
