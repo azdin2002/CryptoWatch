@@ -124,6 +124,15 @@ export const Navbar = ({ user, onMenuClick }: NavbarProps) => {
                   </p>
                 ) : null}
               </div>
+              <Link
+                href="/dashboard/profile"
+                role="menuitem"
+                onClick={() => setUserMenuOpen(false)}
+                className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-zinc-700 transition-colors hover:bg-emerald-50 hover:text-emerald-700 dark:text-zinc-300 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-300"
+              >
+                <User className="h-4 w-4" aria-hidden="true" />
+                Profile
+              </Link>
               <button
                 type="button"
                 role="menuitem"

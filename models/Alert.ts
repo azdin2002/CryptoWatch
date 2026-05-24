@@ -18,6 +18,7 @@ export interface Alert {
   condition: AlertCondition;
   active: boolean;
   triggeredAt: Date | null;
+  notificationLockedAt: Date | null;
   createdAt: Date;
 }
 
@@ -74,6 +75,10 @@ const alertSchema = new Schema<Alert, AlertModel>(
       type: Date,
       default: null,
     },
+    notificationLockedAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: {
@@ -84,6 +89,7 @@ const alertSchema = new Schema<Alert, AlertModel>(
 );
 
 alertSchema.index({ userId: 1, cryptoId: 1, active: 1 });
+alertSchema.index({ active: 1, triggeredAt: 1, notificationLockedAt: 1 });
 alertSchema.index(
   { userId: 1, cryptoId: 1, condition: 1, targetPrice: 1, active: 1 },
   {
@@ -112,6 +118,7 @@ alertSchema.statics.markTriggered = async function markTriggered(
       $set: {
         active: false,
         triggeredAt: new Date(),
+        notificationLockedAt: null,
       },
     },
     {

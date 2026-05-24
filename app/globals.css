@@ -6,6 +6,8 @@
   color-scheme: light;
   --background: #f8fafc;
   --foreground: #18181b;
+  --font-geist-sans: "Inter", "Segoe UI", Arial, Helvetica, sans-serif;
+  --font-geist-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
 
 @theme inline {
@@ -24,7 +26,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans);
 }
 
 ::selection {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -20,6 +20,9 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
   year: "numeric",
 });
 
+const ALERT_EMAIL_TOAST_STORAGE_KEY = "cryptowatch-alert-email-toasts";
+const RECENT_TRIGGER_WINDOW_MS = 10 * 60 * 1_000;
+
 const formatAlertDate = (value: string): string => {
   const date = new Date(value);
 
@@ -31,11 +34,80 @@ const getConditionLabel = (alert: AlertRecord): string =>
     alert.targetPrice,
   )}`;
 
+const readSeenAlertToastIds = (): Set<string> => {
+  const rawValue = window.localStorage.getItem(ALERT_EMAIL_TOAST_STORAGE_KEY);
+
+  if (!rawValue) {
+    return new Set();
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(rawValue);
+
+    if (!Array.isArray(parsed)) {
+      return new Set();
+    }
+
+    return new Set(
+      parsed.filter((value): value is string => typeof value === "string"),
+    );
+  } catch {
+    return new Set();
+  }
+};
+
+const writeSeenAlertToastIds = (seenAlertIds: Set<string>): void => {
+  window.localStorage.setItem(
+    ALERT_EMAIL_TOAST_STORAGE_KEY,
+    JSON.stringify(Array.from(seenAlertIds).slice(-100)),
+  );
+};
+
+const isRecentlyTriggered = (alert: AlertRecord): boolean => {
+  if (alert.active || !alert.triggeredAt) {
+    return false;
+  }
+
+  const triggeredAt = new Date(alert.triggeredAt).getTime();
+
+  return (
+    Number.isFinite(triggeredAt) &&
+    Date.now() - triggeredAt <= RECENT_TRIGGER_WINDOW_MS
+  );
+};
+
 export const AlertsList = () => {
   const { alerts, loading, removePriceAlert } = useAlerts();
   const [removingAlertIds, setRemovingAlertIds] = useState<Set<string>>(
     () => new Set(),
   );
+
+  useEffect(() => {
+    const recentTriggeredAlerts = alerts.filter(isRecentlyTriggered);
+
+    if (recentTriggeredAlerts.length === 0) {
+      return;
+    }
+
+    const seenAlertIds = readSeenAlertToastIds();
+    let changed = false;
+
+    recentTriggeredAlerts.forEach((alert) => {
+      if (seenAlertIds.has(alert.id)) {
+        return;
+      }
+
+      toast.success(`Alert email sent for ${alert.cryptoName}.`, {
+        id: `alert-email-sent-${alert.id}`,
+      });
+      seenAlertIds.add(alert.id);
+      changed = true;
+    });
+
+    if (changed) {
+      writeSeenAlertToastIds(seenAlertIds);
+    }
+  }, [alerts]);
 
   const handleRemove = async (alertId: string): Promise<void> => {
     if (removingAlertIds.has(alertId)) {

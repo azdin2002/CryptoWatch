@@ -252,6 +252,13 @@ export interface GlobalStats {
   };
 }
 
+export type SimplePriceMap = Record<
+  string,
+  {
+    usd?: number;
+  }
+>;
+
 const buildUrl = (
   endpoint: string,
   params: Record<string, QueryValue> = {},
@@ -482,3 +489,16 @@ export const searchCoins = async (
 export const getGlobalStats = async (
   options?: CoinGeckoRequestOptions,
 ): Promise<GlobalStats> => coinGeckoFetch<GlobalStats>("/global", {}, options);
+
+export const getSimplePrices = async (
+  ids: string[],
+  options?: CoinGeckoRequestOptions,
+): Promise<SimplePriceMap> =>
+  coinGeckoFetch<SimplePriceMap>(
+    "/simple/price",
+    {
+      ids: ids.join(","),
+      vs_currencies: "usd",
+    },
+    options,
+  );
