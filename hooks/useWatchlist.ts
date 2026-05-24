@@ -10,12 +10,14 @@ import {
   removeCryptoFromWatchlist,
   selectWatchlist,
   selectWatchlistError,
+  selectWatchlistHydrated,
   selectWatchlistLoading,
 } from "@/redux/slices/watchlistSlice";
 
 interface UseWatchlistResult {
   watchlist: string[];
   loading: boolean;
+  hydrated: boolean;
   error: string | null;
   isInWatchlist: (cryptoId: string) => boolean;
   addCrypto: (cryptoId: string) => Promise<void>;
@@ -27,19 +29,24 @@ export const useWatchlist = (): UseWatchlistResult => {
   const dispatch = useAppDispatch();
   const watchlist = useAppSelector(selectWatchlist);
   const loading = useAppSelector(selectWatchlistLoading);
+  const hydrated = useAppSelector(selectWatchlistHydrated);
   const error = useAppSelector(selectWatchlistError);
 
   useEffect(() => {
-    void dispatch(fetchWatchlist())
-      .unwrap()
-      .catch((fetchError: unknown) => {
+    if (hydrated || loading) {
+      return;
+    }
+
+    void dispatch(fetchWatchlist()).then((action) => {
+      if (fetchWatchlist.rejected.match(action) && !action.meta.condition) {
         toastApiError(
-          fetchError,
+          action.payload ?? action.error.message,
           "Unable to fetch watchlist.",
           "watchlist-fetch-error",
         );
-      });
-  }, [dispatch]);
+      }
+    });
+  }, [dispatch, hydrated, loading]);
 
   const isInWatchlist = useCallback(
     (cryptoId: string): boolean =>
@@ -62,12 +69,13 @@ export const useWatchlist = (): UseWatchlistResult => {
   );
 
   const refetch = useCallback(async (): Promise<void> => {
-    await dispatch(fetchWatchlist()).unwrap();
+    await dispatch(fetchWatchlist({ force: true })).unwrap();
   }, [dispatch]);
 
   return {
     watchlist,
     loading,
+    hydrated,
     error,
     isInWatchlist,
     addCrypto,

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, LayoutDashboard, Star, UserRound, X } from "lucide-react";
+import { Bell, LayoutDashboard, Star, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 interface SidebarProps {
@@ -31,11 +31,6 @@ const navItems: NavItem[] = [
     href: "/dashboard/alerts",
     label: "Alerts",
     icon: Bell,
-  },
-  {
-    href: "/dashboard/profile",
-    label: "Profile",
-    icon: UserRound,
   },
 ];
 

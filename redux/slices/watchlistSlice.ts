@@ -11,13 +11,19 @@ interface WatchlistState {
   cryptos: string[];
   loading: boolean;
   error: string | null;
+  hydrated: boolean;
 }
 
 const initialState: WatchlistState = {
   cryptos: [],
   loading: false,
   error: null,
+  hydrated: false,
 };
+
+interface FetchWatchlistOptions {
+  force?: boolean;
+}
 
 const requestWatchlist = async (
   input: RequestInfo | URL,
@@ -35,17 +41,31 @@ const requestWatchlist = async (
 
 export const fetchWatchlist = createAsyncThunk<
   WatchlistData,
-  void,
-  { rejectValue: string }
->("watchlist/fetch", async (_, { rejectWithValue }) => {
-  try {
-    return await requestWatchlist("/api/watchlist");
-  } catch (error) {
-    return rejectWithValue(
-      error instanceof Error ? error.message : "Unable to fetch watchlist.",
-    );
-  }
-});
+  FetchWatchlistOptions | undefined,
+  { rejectValue: string; state: RootState }
+>(
+  "watchlist/fetch",
+  async (_, { rejectWithValue }) => {
+    try {
+      return await requestWatchlist("/api/watchlist");
+    } catch (error) {
+      return rejectWithValue(
+        error instanceof Error ? error.message : "Unable to fetch watchlist.",
+      );
+    }
+  },
+  {
+    condition: (options, { getState }) => {
+      const state = getState();
+
+      if (options?.force) {
+        return !state.watchlist.loading;
+      }
+
+      return !state.watchlist.loading && !state.watchlist.hydrated;
+    },
+  },
+);
 
 export const addCryptoToWatchlist = createAsyncThunk<
   WatchlistData,
@@ -97,6 +117,7 @@ const watchlistSlice = createSlice({
     setWatchlist(state, action: PayloadAction<string[]>) {
       state.cryptos = action.payload;
       state.error = null;
+      state.hydrated = true;
     },
   },
   extraReducers: (builder) => {
@@ -108,6 +129,7 @@ const watchlistSlice = createSlice({
       .addCase(fetchWatchlist.fulfilled, (state, action) => {
         state.loading = false;
         state.cryptos = action.payload.cryptos;
+        state.hydrated = true;
       })
       .addCase(fetchWatchlist.rejected, (state, action) => {
         state.loading = false;
@@ -120,6 +142,7 @@ const watchlistSlice = createSlice({
       .addCase(addCryptoToWatchlist.fulfilled, (state, action) => {
         state.loading = false;
         state.cryptos = action.payload.cryptos;
+        state.hydrated = true;
       })
       .addCase(addCryptoToWatchlist.rejected, (state, action) => {
         state.loading = false;
@@ -132,6 +155,7 @@ const watchlistSlice = createSlice({
       .addCase(removeCryptoFromWatchlist.fulfilled, (state, action) => {
         state.loading = false;
         state.cryptos = action.payload.cryptos;
+        state.hydrated = true;
       })
       .addCase(removeCryptoFromWatchlist.rejected, (state, action) => {
         state.loading = false;
@@ -148,6 +172,9 @@ export const selectWatchlist = (state: RootState): string[] =>
 export const selectWatchlistLoading = (state: RootState): boolean =>
   state.watchlist.loading;
 
+export const selectWatchlistHydrated = (state: RootState): boolean =>
+  state.watchlist.hydrated;
+
 export const selectWatchlistError = (state: RootState): string | null =>
   state.watchlist.error;
 
@@ -157,4 +184,3 @@ export const selectIsInWatchlist =
     state.watchlist.cryptos.includes(cryptoId);
 
 export default watchlistSlice.reducer;
-

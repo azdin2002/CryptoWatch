@@ -443,6 +443,24 @@ export const getMarkets = async (
     options,
   );
 
+export const getMarketsByIds = async (
+  ids: string[],
+  options?: CoinGeckoRequestOptions,
+): Promise<CoinMarket[]> =>
+  coinGeckoFetch<CoinMarket[]>(
+    "/coins/markets",
+    {
+      vs_currency: "usd",
+      ids: ids.join(","),
+      order: "market_cap_desc",
+      per_page: Math.min(Math.max(ids.length, 1), 250),
+      page: 1,
+      sparkline: false,
+      price_change_percentage: "24h",
+    },
+    options,
+  );
+
 export const getCoinDetail = async (
   id: string,
   options?: CoinGeckoRequestOptions,
