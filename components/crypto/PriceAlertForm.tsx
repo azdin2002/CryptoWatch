@@ -1,8 +1,10 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { useAlerts } from "@/hooks/useAlerts";
+import { getToastErrorMessage } from "@/lib/toasts";
 import type { AlertCondition } from "@/types";
 
 interface PriceAlertFormProps {
@@ -38,10 +40,8 @@ export const PriceAlertForm = ({
   const normalizedSymbol = cryptoSymbol.trim().toUpperCase();
   const [targetPrice, setTargetPrice] = useState<string>("");
   const [condition, setCondition] = useState<AlertCondition>("above");
-  const [validationError, setValidationError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState<boolean>(false);
-  const { activeAlerts, createPriceAlert, error } = useAlerts();
+  const { activeAlerts, createPriceAlert } = useAlerts();
 
   const currentPriceLabel = useMemo(
     () =>
@@ -53,13 +53,11 @@ export const PriceAlertForm = ({
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setValidationError(null);
-    setSuccessMessage(null);
 
     const price = normalizePrice(targetPrice);
 
     if (!price) {
-      setValidationError("Enter a positive target price.");
+      toast.error("Enter a positive target price.");
       return;
     }
 
@@ -71,7 +69,7 @@ export const PriceAlertForm = ({
     );
 
     if (duplicateAlert) {
-      setValidationError("You already have this active alert.");
+      toast.error("You already have this active alert.");
       return;
     }
 
@@ -86,16 +84,9 @@ export const PriceAlertForm = ({
         condition,
       });
       setTargetPrice("");
-      setSuccessMessage("Alert created.");
+      toast.success("Alert created.");
     } catch (createError) {
-      const message =
-        typeof createError === "string"
-          ? createError
-          : createError instanceof Error
-            ? createError.message
-            : "Unable to create alert.";
-
-      setValidationError(message);
+      toast.error(getToastErrorMessage(createError, "Unable to create alert."));
     } finally {
       setSubmitting(false);
     }
@@ -165,12 +156,6 @@ export const PriceAlertForm = ({
         </div>
       </form>
 
-      {validationError || error ? (
-        <p className="mt-3 text-sm text-red-600">{validationError ?? error}</p>
-      ) : null}
-      {successMessage ? (
-        <p className="mt-3 text-sm text-emerald-700">{successMessage}</p>
-      ) : null}
     </section>
   );
 };

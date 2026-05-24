@@ -3,8 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
+import { toast } from "sonner";
 
 import { useWatchlist } from "@/hooks/useWatchlist";
+import { getToastErrorMessage } from "@/lib/toasts";
 import type { CryptoMarket } from "@/types";
 
 type SortField =
@@ -132,7 +134,6 @@ export const CryptoTable = ({
   >(() => new Map());
   const {
     loading: watchlistLoading,
-    error: watchlistError,
     isInWatchlist,
     addCrypto,
     removeCrypto,
@@ -179,15 +180,20 @@ export const CryptoTable = ({
       try {
         if (wasSaved) {
           await removeCrypto(normalizedCryptoId);
+          toast.success("Removed from watchlist.");
         } else {
           await addCrypto(normalizedCryptoId);
+          toast.success("Added to watchlist.");
         }
-      } catch {
+      } catch (toggleError) {
         setOptimisticWatchlistStatus((current) => {
           const next = new Map(current);
           next.set(normalizedCryptoId, wasSaved);
           return next;
         });
+        toast.error(
+          getToastErrorMessage(toggleError, "Unable to update watchlist."),
+        );
       } finally {
         setOptimisticWatchlistStatus((current) => {
           const next = new Map(current);
@@ -229,11 +235,6 @@ export const CryptoTable = ({
 
   return (
     <div className="overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-sm">
-      {watchlistError ? (
-        <div className="border-b border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
-          {watchlistError}
-        </div>
-      ) : null}
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-zinc-200 text-sm">
           <thead className="bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500">

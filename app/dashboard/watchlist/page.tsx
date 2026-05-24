@@ -1,9 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { CryptoTable } from "@/components/crypto/CryptoTable";
 import { useWatchlist } from "@/hooks/useWatchlist";
+import { getToastErrorMessage } from "@/lib/toasts";
 import type { ApiResponse, CryptoDetail, CryptoMarket } from "@/types";
 
 const mapDetailToMarket = (crypto: CryptoDetail): CryptoMarket => {
@@ -100,11 +102,12 @@ export default function WatchlistPage() {
           return;
         }
 
-        setError(
-          fetchError instanceof Error
-            ? fetchError.message
-            : "Unable to load watchlist data.",
+        const message = getToastErrorMessage(
+          fetchError,
+          "Unable to load watchlist data.",
         );
+        setError(message);
+        toast.error(message, { id: "watchlist-detail-api-error" });
       } finally {
         if (abortControllerRef.current === controller) {
           setLoading(false);

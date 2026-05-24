@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect } from "react";
 
+import { toastApiError } from "@/lib/toasts";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
   createAlert,
@@ -32,7 +33,15 @@ export const useAlerts = (): UseAlertsResult => {
   const error = useAppSelector(selectAlertsError);
 
   useEffect(() => {
-    void dispatch(fetchAlerts());
+    void dispatch(fetchAlerts())
+      .unwrap()
+      .catch((fetchError: unknown) => {
+        toastApiError(
+          fetchError,
+          "Unable to fetch alerts.",
+          "alerts-fetch-error",
+        );
+      });
   }, [dispatch]);
 
   const createPriceAlert = useCallback(

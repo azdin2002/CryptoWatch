@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
+import { toast } from "sonner";
 
 interface LoginFormErrors {
   email?: string;
   password?: string;
-  form?: string;
 }
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -42,9 +42,7 @@ const LoginPage = () => {
     return nextErrors;
   };
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
+  const submitLogin = async (): Promise<void> => {
     if (isSubmitting) {
       return;
     }
@@ -57,6 +55,7 @@ const LoginPage = () => {
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      toast.error("Vérifiez les champs du formulaire.");
       return;
     }
 
@@ -72,21 +71,23 @@ const LoginPage = () => {
       });
 
       if (!result?.ok || result.error) {
-        setErrors({
-          form: "Email ou mot de passe incorrect.",
-        });
+        toast.error("Email ou mot de passe incorrect.");
         return;
       }
 
+      toast.success("Connexion réussie.");
       router.push("/dashboard");
       router.refresh();
     } catch {
-      setErrors({
-        form: "Impossible de se connecter pour le moment.",
-      });
+      toast.error("Impossible de se connecter pour le moment.");
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
+    event.preventDefault();
+    void submitLogin();
   };
 
   return (
@@ -101,19 +102,8 @@ const LoginPage = () => {
           </h1>
         </div>
 
-        {errors.form ? (
-          <div
-            className="mb-5 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-            role="alert"
-          >
-            {errors.form}
-          </div>
-        ) : null}
-
         <form
-          action="/api/auth/callback/credentials"
           className="space-y-5"
-          method="post"
           noValidate
           onSubmit={handleSubmit}
         >

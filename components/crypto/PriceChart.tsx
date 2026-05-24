@@ -10,7 +10,9 @@ import {
   YAxis,
 } from "recharts";
 import type { TooltipContentProps } from "recharts";
+import { toast } from "sonner";
 
+import { getToastErrorMessage } from "@/lib/toasts";
 import type { ApiResponse, PriceHistory } from "@/types";
 
 type ChartPeriod = "7" | "30" | "90" | "365";
@@ -166,11 +168,14 @@ export const PriceChart = ({ cryptoId, cryptoName }: PriceChartProps) => {
         }
 
         setPoints([]);
-        setError(
-          fetchError instanceof Error
-            ? fetchError.message
-            : "Unable to load chart data.",
+        const message = getToastErrorMessage(
+          fetchError,
+          "Unable to load chart data.",
         );
+        setError(message);
+        toast.error(message, {
+          id: `chart-api-error-${normalizedCryptoId}-${period}`,
+        });
       } finally {
         if (activeRequestKeyRef.current === requestKey) {
           activeRequestKeyRef.current = null;

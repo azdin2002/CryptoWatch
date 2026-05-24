@@ -3,13 +3,13 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { toast } from "sonner";
 
 interface RegisterFormErrors {
   name?: string;
   email?: string;
   password?: string;
   confirmPassword?: string;
-  form?: string;
 }
 
 interface RegisterErrorResponse {
@@ -96,9 +96,7 @@ const RegisterPage = () => {
     return nextErrors;
   };
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
+  const submitRegister = async (): Promise<void> => {
     if (isSubmitting) {
       return;
     }
@@ -113,6 +111,7 @@ const RegisterPage = () => {
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
+      toast.error("Vérifiez les champs du formulaire.");
       return;
     }
 
@@ -133,21 +132,23 @@ const RegisterPage = () => {
       });
 
       if (!response.ok) {
-        setErrors({
-          form: await getRegisterErrorMessage(response),
-        });
+        toast.error(await getRegisterErrorMessage(response));
         return;
       }
 
+      toast.success("Compte créé avec succès.");
       router.push("/login");
       router.refresh();
     } catch {
-      setErrors({
-        form: "Impossible de créer le compte pour le moment.",
-      });
+      toast.error("Impossible de créer le compte pour le moment.");
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
+    event.preventDefault();
+    void submitRegister();
   };
 
   return (
@@ -162,19 +163,8 @@ const RegisterPage = () => {
           </h1>
         </div>
 
-        {errors.form ? (
-          <div
-            className="mb-5 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
-            role="alert"
-          >
-            {errors.form}
-          </div>
-        ) : null}
-
         <form
-          action="/api/auth/register"
           className="space-y-5"
-          method="post"
           noValidate
           onSubmit={handleSubmit}
         >

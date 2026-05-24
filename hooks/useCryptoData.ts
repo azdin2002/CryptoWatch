@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { getToastErrorMessage } from "@/lib/toasts";
 import type { ApiResponse, CryptoMarket } from "@/types";
+import { toast } from "sonner";
 
 interface UseCryptoDataOptions {
   page?: number;
@@ -61,11 +63,13 @@ export const useCryptoData = ({
         return;
       }
 
-      setError(
-        fetchError instanceof Error
-          ? fetchError.message
-          : "Unable to fetch crypto markets",
+      const message = getToastErrorMessage(
+        fetchError,
+        "Unable to fetch crypto markets",
       );
+
+      setError(message);
+      toast.error(message, { id: "crypto-markets-api-error" });
     } finally {
       if (abortControllerRef.current === controller) {
         setLoading(false);

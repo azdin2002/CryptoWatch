@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { useWatchlist } from "@/hooks/useWatchlist";
+import { getToastErrorMessage } from "@/lib/toasts";
 
 interface WatchlistButtonProps {
   cryptoId: string;
@@ -10,10 +12,8 @@ interface WatchlistButtonProps {
 
 export const WatchlistButton = ({ cryptoId }: WatchlistButtonProps) => {
   const normalizedCryptoId = cryptoId.trim().toLowerCase();
-  const { loading, error, isInWatchlist, addCrypto, removeCrypto } =
-    useWatchlist();
+  const { loading, isInWatchlist, addCrypto, removeCrypto } = useWatchlist();
   const [syncing, setSyncing] = useState<boolean>(false);
-  const [localError, setLocalError] = useState<string | null>(null);
   const saved = isInWatchlist(normalizedCryptoId);
 
   const handleToggle = async (): Promise<void> => {
@@ -22,19 +22,18 @@ export const WatchlistButton = ({ cryptoId }: WatchlistButtonProps) => {
     }
 
     setSyncing(true);
-    setLocalError(null);
 
     try {
       if (saved) {
         await removeCrypto(normalizedCryptoId);
+        toast.success("Removed from watchlist.");
       } else {
         await addCrypto(normalizedCryptoId);
+        toast.success("Added to watchlist.");
       }
     } catch (toggleError) {
-      setLocalError(
-        toggleError instanceof Error
-          ? toggleError.message
-          : "Unable to update watchlist.",
+      toast.error(
+        getToastErrorMessage(toggleError, "Unable to update watchlist."),
       );
     } finally {
       setSyncing(false);
@@ -57,9 +56,6 @@ export const WatchlistButton = ({ cryptoId }: WatchlistButtonProps) => {
       >
         {syncing ? "Saving..." : saved ? "Remove from watchlist" : "Add to watchlist"}
       </button>
-      {localError || error ? (
-        <p className="text-sm text-red-600">{localError ?? error}</p>
-      ) : null}
     </div>
   );
 };

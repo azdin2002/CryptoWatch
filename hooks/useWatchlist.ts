@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect } from "react";
 
+import { toastApiError } from "@/lib/toasts";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
   addCryptoToWatchlist,
@@ -29,7 +30,15 @@ export const useWatchlist = (): UseWatchlistResult => {
   const error = useAppSelector(selectWatchlistError);
 
   useEffect(() => {
-    void dispatch(fetchWatchlist());
+    void dispatch(fetchWatchlist())
+      .unwrap()
+      .catch((fetchError: unknown) => {
+        toastApiError(
+          fetchError,
+          "Unable to fetch watchlist.",
+          "watchlist-fetch-error",
+        );
+      });
   }, [dispatch]);
 
   const isInWatchlist = useCallback(

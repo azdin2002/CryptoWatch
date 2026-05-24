@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { useAlerts } from "@/hooks/useAlerts";
+import { getToastErrorMessage } from "@/lib/toasts";
 import type { AlertRecord } from "@/types";
 
 const currencyFormatter = new Intl.NumberFormat("en-US", {
@@ -29,18 +31,16 @@ const getConditionLabel = (alert: AlertRecord): string =>
   )}`;
 
 export const AlertsList = () => {
-  const { alerts, loading, error, removePriceAlert } = useAlerts();
+  const { alerts, loading, removePriceAlert } = useAlerts();
   const [removingAlertIds, setRemovingAlertIds] = useState<Set<string>>(
     () => new Set(),
   );
-  const [localError, setLocalError] = useState<string | null>(null);
 
   const handleRemove = async (alertId: string): Promise<void> => {
     if (removingAlertIds.has(alertId)) {
       return;
     }
 
-    setLocalError(null);
     setRemovingAlertIds((current) => {
       const next = new Set(current);
       next.add(alertId);
@@ -49,15 +49,9 @@ export const AlertsList = () => {
 
     try {
       await removePriceAlert(alertId);
+      toast.success("Alert removed.");
     } catch (removeError) {
-      const message =
-        typeof removeError === "string"
-          ? removeError
-          : removeError instanceof Error
-            ? removeError.message
-            : "Unable to remove alert.";
-
-      setLocalError(message);
+      toast.error(getToastErrorMessage(removeError, "Unable to remove alert."));
     } finally {
       setRemovingAlertIds((current) => {
         const next = new Set(current);
@@ -75,12 +69,6 @@ export const AlertsList = () => {
           Saved thresholds for your tracked cryptocurrencies.
         </p>
       </div>
-
-      {localError || error ? (
-        <div className="border-b border-red-100 bg-red-50 px-5 py-3 text-sm text-red-700 sm:px-6">
-          {localError ?? error}
-        </div>
-      ) : null}
 
       {loading && alerts.length === 0 ? (
         <div className="px-5 py-6 text-sm text-zinc-600 sm:px-6">

@@ -9,7 +9,9 @@ import {
   useState,
 } from "react";
 import type { KeyboardEvent } from "react";
+import { toast } from "sonner";
 
+import { getToastErrorMessage } from "@/lib/toasts";
 import type { ApiResponse, SearchCoin } from "@/types";
 
 const MAX_RESULTS = 8;
@@ -38,7 +40,6 @@ export const SearchBar = () => {
   const [query, setQuery] = useState<string>("");
   const [results, setResults] = useState<SearchCoin[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<boolean>(false);
   const [activeIndex, setActiveIndex] = useState<number>(-1);
   const debouncedQuery = useDebouncedValue(query, DEBOUNCE_MS);
@@ -83,7 +84,6 @@ export const SearchBar = () => {
 
     const fetchResults = async (): Promise<void> => {
       setLoading(true);
-      setError(null);
 
       try {
         const params = new URLSearchParams({
@@ -112,11 +112,10 @@ export const SearchBar = () => {
 
         if (abortControllerRef.current === controller) {
           setResults([]);
-          setOpen(true);
-          setError(
-            searchError instanceof Error
-              ? searchError.message
-              : "Unable to search cryptos.",
+          setOpen(false);
+          toast.error(
+            getToastErrorMessage(searchError, "Unable to search cryptos."),
+            { id: "crypto-search-api-error" },
           );
         }
       } finally {
@@ -182,7 +181,7 @@ export const SearchBar = () => {
     }
   };
 
-  const showDropdown = open && (query.trim() || loading || error);
+  const showDropdown = open && (query.trim() || loading);
 
   return (
     <div ref={wrapperRef} className="relative w-full max-w-xl">
@@ -202,7 +201,6 @@ export const SearchBar = () => {
           if (!nextQuery.trim()) {
             setResults([]);
             setLoading(false);
-            setError(null);
             setOpen(false);
             setActiveIndex(-1);
           }
@@ -228,8 +226,6 @@ export const SearchBar = () => {
         <div className="absolute left-0 right-0 z-20 mt-2 overflow-hidden rounded-lg border border-zinc-200 bg-white shadow-lg">
           {loading ? (
             <div className="px-4 py-3 text-sm text-zinc-600">Searching...</div>
-          ) : error ? (
-            <div className="px-4 py-3 text-sm text-red-700">{error}</div>
           ) : results.length === 0 ? (
             <div className="px-4 py-3 text-sm text-zinc-600">
               No matching cryptocurrencies found.
