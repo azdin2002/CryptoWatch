@@ -10,7 +10,7 @@ import { useWatchlist } from "@/hooks/useWatchlist";
 import { getToastErrorMessage } from "@/lib/toasts";
 import type { CryptoMarket } from "@/types";
 
-type SortField =
+export type CryptoTableSortField =
   | "market_cap_rank"
   | "name"
   | "symbol"
@@ -19,16 +19,18 @@ type SortField =
   | "market_cap"
   | "total_volume";
 
-type SortDirection = "asc" | "desc";
+export type CryptoTableSortDirection = "asc" | "desc";
 
 interface CryptoTableProps {
   cryptos: CryptoMarket[];
+  defaultSortDirection?: CryptoTableSortDirection;
+  defaultSortField?: CryptoTableSortField;
   loading?: boolean;
   error?: string | null;
 }
 
 interface Column {
-  field: SortField;
+  field: CryptoTableSortField;
   label: string;
   className?: string;
   align?: "left" | "right";
@@ -79,7 +81,7 @@ const percentFormatter = new Intl.NumberFormat("en-US", {
 
 const getSortableValue = (
   crypto: CryptoMarket,
-  field: SortField,
+  field: CryptoTableSortField,
 ): string | number => {
   const value = crypto[field];
 
@@ -96,8 +98,8 @@ const getSortableValue = (
 
 const sortCryptos = (
   cryptos: CryptoMarket[],
-  field: SortField,
-  direction: SortDirection,
+  field: CryptoTableSortField,
+  direction: CryptoTableSortDirection,
 ): CryptoMarket[] =>
   [...cryptos].sort((first, second) => {
     const firstValue = getSortableValue(first, field);
@@ -122,11 +124,15 @@ const formatPercentage = (value: number | null): string =>
 
 export const CryptoTable = ({
   cryptos,
+  defaultSortDirection = "asc",
+  defaultSortField = "market_cap_rank",
   loading = false,
   error = null,
 }: CryptoTableProps) => {
-  const [sortField, setSortField] = useState<SortField>("market_cap_rank");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [sortField, setSortField] =
+    useState<CryptoTableSortField>(defaultSortField);
+  const [sortDirection, setSortDirection] =
+    useState<CryptoTableSortDirection>(defaultSortDirection);
   const [syncingCryptoIds, setSyncingCryptoIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -145,7 +151,7 @@ export const CryptoTable = ({
     [cryptos, sortDirection, sortField],
   );
 
-  const handleSort = (field: SortField): void => {
+  const handleSort = (field: CryptoTableSortField): void => {
     if (field === sortField) {
       setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
       return;

@@ -7,6 +7,8 @@ import type { ApiResponse, CryptoMarket } from "@/types";
 import { toast } from "sonner";
 
 interface UseCryptoDataOptions {
+  fresh?: boolean;
+  initialCryptos?: CryptoMarket[];
   page?: number;
   refreshIntervalMs?: number;
 }
@@ -14,6 +16,7 @@ interface UseCryptoDataOptions {
 interface UseCryptoDataResult {
   cryptos: CryptoMarket[];
   loading: boolean;
+  lastUpdatedAt: Date | null;
   error: string | null;
   refetch: () => Promise<void>;
 }
@@ -21,13 +24,18 @@ interface UseCryptoDataResult {
 const DEFAULT_REFRESH_INTERVAL_MS = 30_000;
 
 export const useCryptoData = ({
+  fresh = false,
+  initialCryptos = [],
   page = 1,
   refreshIntervalMs = DEFAULT_REFRESH_INTERVAL_MS,
 }: UseCryptoDataOptions = {}): UseCryptoDataResult => {
-  const [cryptos, setCryptos] = useState<CryptoMarket[]>([]);
-  const [loading, setLoading] = useState(true);
+  const hasInitialCryptos = initialCryptos.length > 0;
+  const [cryptos, setCryptos] = useState<CryptoMarket[]>(initialCryptos);
+  const [loading, setLoading] = useState(!hasInitialCryptos);
+  const [lastUpdatedAt, setLastUpdatedAt] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const hasFetchedRef = useRef<boolean>(hasInitialCryptos);
 
   const fetchCryptos = useCallback(async (): Promise<void> => {
     abortControllerRef.current?.abort();
@@ -35,7 +43,9 @@ export const useCryptoData = ({
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
-    setLoading(true);
+    if (!hasFetchedRef.current) {
+      setLoading(true);
+    }
     setError(null);
 
     try {
@@ -44,7 +54,12 @@ export const useCryptoData = ({
         page: String(page),
       });
 
+      if (fresh) {
+        params.set("fresh", "true");
+      }
+
       const response = await fetch(`/api/crypto?${params.toString()}`, {
+        cache: fresh ? "no-store" : "default",
         signal: controller.signal,
       });
 
@@ -55,6 +70,8 @@ export const useCryptoData = ({
       }
 
       setCryptos(payload.data ?? []);
+      setLastUpdatedAt(new Date());
+      hasFetchedRef.current = true;
     } catch (fetchError) {
       if (
         fetchError instanceof DOMException &&
@@ -75,19 +92,23 @@ export const useCryptoData = ({
         setLoading(false);
       }
     }
-  }, [page]);
+  }, [fresh, page]);
 
   useEffect(() => {
-    const initialFetchId = window.setTimeout(() => {
-      void fetchCryptos();
-    }, 0);
+    const initialFetchId = hasFetchedRef.current
+      ? null
+      : window.setTimeout(() => {
+          void fetchCryptos();
+        }, 0);
 
     const intervalId = window.setInterval(() => {
       void fetchCryptos();
     }, refreshIntervalMs);
 
     return () => {
-      window.clearTimeout(initialFetchId);
+      if (initialFetchId !== null) {
+        window.clearTimeout(initialFetchId);
+      }
       window.clearInterval(intervalId);
       abortControllerRef.current?.abort();
     };
@@ -96,6 +117,7 @@ export const useCryptoData = ({
   return {
     cryptos,
     loading,
+    lastUpdatedAt,
     error,
     refetch: fetchCryptos,
   };

@@ -83,6 +83,11 @@ const getCryptoIds = (request: NextRequest): string[] => {
   );
 };
 
+const getFreshRequestOptions = (request: NextRequest) =>
+  request.nextUrl.searchParams.get("fresh") === "true"
+    ? ({ cache: "no-store" } as const)
+    : undefined;
+
 const handleRouteError = (error: unknown): NextResponse<ApiResponse<null>> => {
   if (error instanceof CoinGeckoApiError) {
     const status =
@@ -100,10 +105,11 @@ const handleMarkets = async (
   request: NextRequest,
 ): Promise<NextResponse<ApiResponse<CryptoMarket[]>>> => {
   const ids = getCryptoIds(request);
+  const options = getFreshRequestOptions(request);
   const markets =
     ids.length > 0
-      ? await getMarketsByIds(ids)
-      : await getMarkets(getPage(request));
+      ? await getMarketsByIds(ids, options)
+      : await getMarkets(getPage(request), options);
 
   return jsonResponse<CryptoMarket[]>(markets, 200);
 };
