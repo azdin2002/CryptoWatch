@@ -1,8 +1,1 @@
-{
-  "crons": [
-    {
-      "path": "/api/alerts/check?secret=MySuperSecretCryptoWatch2026",
-      "schedule": "*/5 * * * *"
-    }
-  ]
-}
+
