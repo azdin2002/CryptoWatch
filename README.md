@@ -195,7 +195,7 @@ cryptowatch/
 
 ```bash
 # 1. Cloner le projet
-git clone https://github.com/votre-groupe/cryptowatch.git
+git clone https://github.com/azdin2002/cryptowatch.git
 cd cryptowatch
 
 # 2. Installer les dépendances
