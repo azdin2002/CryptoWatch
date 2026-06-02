@@ -220,7 +220,45 @@ MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/cryptowatch
 NEXTAUTH_SECRET=votre-secret-32-caracteres
 NEXTAUTH_URL=http://localhost:3000
 COINGECKO_API_KEY=votre-cle-api   # optionnel
+EMAIL_SERVER_HOST=smtp.gmail.com
+EMAIL_SERVER_PORT=465
+EMAIL_SERVER_USER=votre-email-smtp
+EMAIL_SERVER_PASSWORD=votre-mot-de-passe-app
+EMAIL_FROM="CryptoWatch <votre-email-smtp>"
+CRON_SECRET=votre-secret-cron
 ```
+
+---
+
+## Vérification automatique des alertes
+
+Les alertes email sont envoyées par l'endpoint protégé :
+
+```text
+GET /api/alerts/check
+```
+
+En production, cet endpoint refuse les requêtes sans `CRON_SECRET`. Un appel direct vers
+`https://votre-domaine.vercel.app/api/alerts/check` retourne donc `401 Unauthorized`.
+
+Pour un service cron externe comme cron-job.org, configurez l'une de ces options :
+
+```text
+https://votre-domaine.vercel.app/api/alerts/check?secret=VOTRE_CRON_SECRET
+```
+
+ou ajoutez un header HTTP :
+
+```text
+Authorization: Bearer VOTRE_CRON_SECRET
+```
+
+Si vous utilisez Vercel Cron Jobs, ajoutez `CRON_SECRET` dans les variables
+d'environnement Vercel. Vercel l'envoie automatiquement dans le header
+`Authorization: Bearer ...` pendant l'exécution du cron.
+
+Important : une alerte déclenchée devient inactive après l'envoi de l'email. Pour
+tester plusieurs fois, créez une nouvelle alerte active ou réactivez l'alerte en base.
 
 ---
 
