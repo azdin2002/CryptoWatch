@@ -1,6 +1,6 @@
 import { Activity, BarChart3, Bitcoin, Globe2 } from "lucide-react";
 
-import { CryptoTable } from "@/components/crypto/CryptoTable";
+import { DashboardCryptoPanel } from "@/components/crypto/DashboardCryptoPanel";
 import {
   CoinGeckoApiError,
   getGlobalStats,
@@ -145,15 +145,7 @@ export default async function DashboardPage() {
         })}
       </section>
 
-      <section className="flex flex-col gap-4">
-        <div>
-          <h2 className="text-xl font-semibold">Top Cryptocurrencies</h2>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-            Sorted by market capitalization.
-          </p>
-        </div>
-        <CryptoTable cryptos={cryptos} />
-      </section>
+      <DashboardCryptoPanel initialCryptos={cryptos} />
     </>
   );
 }
