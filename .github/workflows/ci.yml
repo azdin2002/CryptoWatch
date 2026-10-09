@@ -45,3 +45,10 @@ jobs:
             -e SONAR_TOKEN="${{ secrets.SONAR_TOKEN }}" `
             -v "${{ github.workspace }}:/usr/src" `
             sonarsource/sonar-scanner-cli
+      - name: Semgrep SAST Scan
+        shell: powershell
+        run: |
+          docker run --rm `
+            -v "${{ github.workspace }}:/src" `
+            semgrep/semgrep `
+            semgrep scan --config auto --json --output /src/semgrep-report.json /src
