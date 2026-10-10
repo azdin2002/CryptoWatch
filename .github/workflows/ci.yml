@@ -12,6 +12,9 @@ on:
       - main
       - develop
 
+permissions:
+  contents: read
+
 jobs:
   build-and-sonar:
     runs-on: self-hosted
@@ -45,6 +48,7 @@ jobs:
             -e SONAR_TOKEN="${{ secrets.SONAR_TOKEN }}" `
             -v "${{ github.workspace }}:/usr/src" `
             sonarsource/sonar-scanner-cli
+
       - name: Semgrep SAST Scan
         shell: powershell
         run: |
@@ -52,6 +56,7 @@ jobs:
             -v "${{ github.workspace }}:/src" `
             semgrep/semgrep `
             semgrep scan --config auto --json --output /src/semgrep-report.json /src
+
       - name: Upload Semgrep Report
         if: always()
         uses: actions/upload-artifact@v4
