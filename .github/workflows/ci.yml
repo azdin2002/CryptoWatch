@@ -5,7 +5,7 @@ on:
     branches:
       - main
       - develop
-      - features/add_LoadMoreButton
+      - test/sast-vulnerabilities
 
   pull_request:
     branches:
